@@ -243,7 +243,7 @@ class WindowedMultiHeadAttention(tf.keras.layers.Layer):
         x = self.proj_drop(x)
     return x
 
-class ShiftedWindowMultiHeadAttention(tf.keras.layers.Layer):
+class ShiftedWindowMultiHeadAttention(WindowedMultiHeadAttention):
 
   def __init__(self, 
                window_size, 
@@ -264,42 +264,24 @@ class ShiftedWindowMultiHeadAttention(tf.keras.layers.Layer):
                relative_bias_initializer='TruncatedNormal', 
                attention_activation = 'softmax', # typically jsut soft max, more for future developments of something better 
                **kwargs):
-
-    super().__init__(**kwargs)
-
-    if isinstance(window_size, int):
-      window_size = (window_size, window_size)
-
-    self._window_size = window_size # wH, wW
-    self._num_heads = num_heads
-    self._qkv_bias = qkv_bias
-    self._qk_scale = qk_scale 
-
-    self._project_attention = project_attention
-
-    # dropout
-    self._attention_dropout = attention_dropout
-    self._projection_dropout = projection_dropout
-
-    # activation 
-    self._attention_activation = attention_activation
-
-    self._shift_size = shift_size or min(window_size) // 2
+    super().__init__(window_size, 
+                     num_heads, 
+                     qkv_bias=qkv_bias, 
+                     qk_scale=qk_scale, 
+                     project_attention=project_attention, 
+                     attention_dropout=attention_dropout, 
+                     projection_dropout=projection_dropout, 
+                     kernel_initializer=kernel_initializer, 
+                     kernel_regularizer=kernel_regularizer, 
+                     bias_initializer=bias_initializer, 
+                     bias_regularizer=bias_regularizer, 
+                     relative_bias_initializer=relative_bias_initializer, 
+                     attention_activation=attention_activation, 
+                     **kwargs)
+    self._shift_size = shift_size or window_size // 2
     self._use_shortcut = use_shortcut
     self._drop_path = drop_path
     self._pre_norm = _get_norm_fn(pre_norm)
-
-    # init and regularizer
-    self._relative_bias_initializer = _get_initializer(relative_bias_initializer)
-    self._relative_bias_regularizer = bias_regularizer
-    self._init_args = dict(
-      kernel_initializer = _get_initializer(kernel_initializer),
-      bias_initializer = bias_initializer,
-      kernel_regularizer = kernel_regularizer,
-      bias_regularizer = bias_regularizer,
-    )
-
-    
   
   def build(self, input_shape):
 
@@ -322,128 +304,68 @@ class ShiftedWindowMultiHeadAttention(tf.keras.layers.Layer):
     if self._pre_norm is not None:
       self.pre_norm = self._pre_norm()
 
-    self._attention_layer = WindowedMultiHeadAttention(
-      window_size=self._window_size, 
-      num_heads=self._num_heads, 
-      qkv_bias=self._qkv_bias, 
-      qk_scale=self._qk_scale, 
-      # project_attention=False, 
-      project_attention=True, 
-      attention_dropout=self._attention_dropout, 
-      projection_dropout=self._projection_dropout, 
-      relative_bias_initializer=self._relative_bias_initializer, 
-      attention_activation=self._attention_activation, 
-      **self._init_args
-    )
-
-    # if self._project_attention:
-    #   self.dim = input_shape[-1]
-    #   self.proj = tf.keras.layers.Dense(self.dim, **self._init_args)
-    #   self.proj_drop = tf.keras.layers.Dropout(self._projection_dropout)
-
-    H, W = input_shape[1:-1]
-    self.Hp = int(np.ceil(H / self._window_size[0]) * self._window_size[0])
-    self.Wp = int(np.ceil(W / self._window_size[1]) * self._window_size[1])
-    img_mask = np.zeros((1, self.Hp, self.Wp, 1))
-
-    h_slices = (
-      slice(0, -self._window_size[0]), 
-      slice(-self._window_size[0], -self._shift_size), 
-      slice(-self._shift_size, None)
-    )
-    w_slices = (
-      slice(0, -self._window_size[1]), 
-      slice(-self._window_size[1], -self._shift_size), 
-      slice(-self._shift_size, None)
-    )
-
-    cnt = 0 
-    for h in h_slices: 
-      for w in w_slices:
-        img_mask[:, h, w, :] = cnt 
-        cnt += 1
-
-    img_mask = tf.convert_to_tensor(img_mask)
-    mask_windows = window_partition(img_mask, self._window_size)
-    mask_windows = tf.reshape(mask_windows, [-1, self._window_size[0]*self._window_size[1]])
-
-    attn_mask = tf.expand_dims(mask_windows, axis = 1) - tf.expand_dims(mask_windows, axis = 2)
-    attn_mask = tf.where(attn_mask == 0, tf.cast(0.0, img_mask.dtype), attn_mask)
-    attn_mask = tf.where(attn_mask != 0, tf.cast(-100.0, img_mask.dtype), attn_mask)
-
-    self._attn_mask = attn_mask
+    super().build(input_shape)
     return 
+  
+  def call(self, x, mask = None, training = None, flatten = False):
 
-  def _build_mask(self, dtype = 'float32'):
-    return tf.cast(self._attn_mask, dtype)
+    if flatten: 
+      _, H, W, C = x.shape
+      x = tf.reshape(x, [-1, H * W, C])
 
-  def call(self, x, mask = None, training = None):
-    
-    shortcut = x 
+    if self._use_shortcut:
+      shortcut = x 
 
-    if self.pre_norm is not None: # pre norm
-      if isinstance(self._pre_norm, tf.keras.layers.LayerNormalization):
-        _, H, W, C = x.shape
-        x = tf.reshape(x, [-1, H * W, C])
-        x = self.pre_norm(x)
-        x = tf.reshape(x, [-1, H, W, C])
-      else:
-        x = self.pre_norm(x)
+    if self.pre_norm is not None:
+      x = self.pre_norm(x)
+
+    if flatten: 
+      x = tf.reshape(x, [-1, H, W, C])
 
     _, H, W, C = x.shape
+
+    # pad feature maps to multiples of window size
     pad_l = pad_t = 0 
     pad_r = (self._window_size[1] - W % self._window_size[1]) % self._window_size[1]
     pad_b = (self._window_size[0] - H % self._window_size[0]) % self._window_size[0]  
     x = tf.pad(x, [[0,0], [pad_t, pad_b], [pad_l, pad_r], [0, 0]]) 
     _, Hp, Wp, _ = x.shape
 
-    shifts = [(0, 0), (-self._shift_size, -self._shift_size)]
+    # cyclic shift 
+    if self._shift_size != 0:
+      shifted_x = tf.roll(x, shift=[-self._shift_size, -self._shift_size], axis = [1, 2])
+      attn_mask = mask  
+    else:
+      shifted_x = x
+      attn_mask = None 
 
-    x_output = None
-    for shift in shifts:
-      # cyclic shift 
-      if shift[0] != 0 or shift[1] != 0:
-        shifted_x = tf.roll(x, shift=[-shift[0], -shift[1]], axis = [1, 2])
-        attn_mask = self._build_mask(dtype = x.dtype) if mask is None else mask
-      else:
-        shifted_x = x
-        attn_mask = None 
+    # partition windows
+    x_windows = window_partition(shifted_x, self._window_size) # nW*B, window_size, window_size, C
+    x_windows = tf.reshape(x_windows, [-1, self._window_size[0] * self._window_size[1], C]) # nW*B, window_size*window_size, C
 
-      x_windows = window_partition(shifted_x, self._window_size) # nW*B, window_size, window_size, C
-      x_windows = tf.reshape(x_windows, [-1, self._window_size[0] * self._window_size[1], C]) # nW*B, window_size*window_size, C
+    attn_windows = super().call(x_windows, mask=attn_mask, training=training)
 
-      attn_windows = self._attention_layer(x_windows, mask=attn_mask, training=training)
+    attn_windows = tf.reshape(attn_windows, [-1, self._window_size[0], self._window_size[1], C]) # nW*B, window_size*window_size, C
+    shifted_x = window_reverse(attn_windows, self._window_size, Hp, Wp) # B H' W' C
 
-      attn_windows = tf.reshape(attn_windows, [-1, self._window_size[0], self._window_size[1], C]) # nW*B, window_size*window_size, C
-      shifted_x = window_reverse(attn_windows, self._window_size, Hp, Wp) # B H' W' C
-
-      if shift[0] != 0 or shift[1] != 0:
-        x_temp = tf.roll(shifted_x, shift=[shift[0], shift[1]], axis = [1, 2])
-      else:
-        x_temp = shifted_x
-
-      if x_output is None:
-        x_output = x_temp
-      else:
-        x_output = x_output + x_temp
-
-    # if self._project_attention:
-    #   x_windows = window_partition(x_output, self._window_size) # nW*B, window_size, window_size, C
-    #   x_windows = tf.reshape(x_output, [-1, self._window_size[0] * self._window_size[1], C]) # nW*B, window_size*window_size, C
-    #   x_windows = self.proj(x_windows)
-    #   if training:
-    #     x_windows = self.proj_drop(x_windows)
-    #   x_windows = tf.reshape(x_windows, [-1, self._window_size[0], self._window_size[1], C]) # nW*B, window_size*window_size, C
-    #   x_output = window_reverse(x_windows, self._window_size, Hp, Wp) # B H' W' C
+    if self._shift_size != 0:
+      x = tf.roll(shifted_x, shift=[self._shift_size, self._shift_size], axis = [1, 2])
+    else:
+      x = shifted_x
 
     if pad_r > 0 or pad_b > 0:
-      x_output = x_output[:, :H, :W, :]
+      x = x[:, :H, :W, :]
+
+    if flatten:
+      x = tf.reshape(x, [-1, H * W, C])
 
     if self._use_shortcut:
       if training:
-        x_output = self.drop_path(x_output)
-      x = shortcut + x_output
+        x = self.drop_path(x)
+      x = shortcut + x
 
+    if flatten:
+      x = tf.reshape(x, [-1, H, W, C])
     return x
 
 # class LeFFN(tf.keras.layers.Layer):
@@ -520,120 +442,16 @@ class ShiftedWindowMultiHeadAttention(tf.keras.layers.Layer):
 #     return 
 
 #   def call(self, x):
-#     # why does LeFFT do expantion then spatial?
-#     x = self.dw_spatial_sample(x)
-#     x = self.norm_spatial_sample(x)
+#     x = self.fc_expand(x)
 #     x = self.act(x)
 
-#     x = self.fc_expand(x)
+#     x = self.dw_spatial_sample(x)
+#     x = self.norm_spatial_sample(x)
 #     x = self.act(x)
 
 #     x = self.fc_compress(x)
 #     x = self.act(x)
 #     return x
-
-# class SwinTransformerLayer(tf.keras.layers.Layer):
-
-#   def __init__(self, 
-#                num_heads, 
-#                window_size = 7, 
-#                shift_size = 0, 
-#                mlp_ratio = 4, 
-#                qkv_bias = True, 
-#                qk_scale = None, 
-#                dropout = 0.0, 
-#                attention_dropout = 0.0, 
-#                drop_path = 0.0, 
-#                activation = 'gelu',
-#                pre_norm = "layer_norm", 
-#                norm_layer = 'layer_norm',
-#                kernel_initializer='TruncatedNormal',
-#                kernel_regularizer=None,
-#                bias_initializer='zeros',
-#                bias_regularizer=None, 
-#                **kwargs):
-#     super().__init__(**kwargs)
-
-#     self._num_heads = num_heads
-#     self._window_size = window_size
-#     self._shift_size = shift_size
-    
-#     self._mlp_ratio = mlp_ratio
-#     self._qkv_bias = qkv_bias
-#     self._qk_scale = qk_scale
-    
-#     self._dropout = dropout 
-#     self._attention_dropout = attention_dropout
-#     self._drop_path = drop_path
-
-#     self._activation = activation
-#     if USE_SYNC_BN:
-#       self._norm_layer_key = "sync_batch_norm"
-#       self._norm_layer = _get_norm_fn("sync_batch_norm")
-#     else:
-#       self._norm_layer_key = "batch_norm"
-#       self._norm_layer = _get_norm_fn("batch_norm")
-#     self._pre_norm_layer_key = pre_norm
-#     self._pre_norm_layer = _get_norm_fn(pre_norm)
-
-#     # init and regularizer
-#     self._init_args = dict(
-#       kernel_initializer = _get_initializer(kernel_initializer),
-#       bias_initializer = bias_initializer,
-#       kernel_regularizer = kernel_regularizer,
-#       bias_regularizer = bias_regularizer,
-#     )
-    
-#   def build(self, input_shape):
-#     self._dims = input_shape[-1]
-
-#     self.attention = ShiftedWindowMultiHeadAttention(
-#       window_size=self._window_size, 
-#       num_heads=self._num_heads, 
-#       use_shortcut=True, 
-#       pre_norm=self._pre_norm_layer_key, 
-#       shift_size=self._shift_size, 
-#       qkv_bias=self._qkv_bias, 
-#       qk_scale=self._qk_scale, 
-#       attention_dropout=self._attention_dropout, 
-#       projection_dropout=self._dropout
-#     )
-
-#     if self._drop_path > 0.0:
-#       self.drop_path = nn_layers.StochasticDepth(self._drop_path)
-#     else:
-#       self.drop_path = Identity()
-    
-#     self.prenorm = self._pre_norm_layer
-#     if self._pre_norm_layer is not None:
-#       self.prenorm = self._pre_norm_layer()
-    
-    
-#     mlp_hidden_dim = int(self._dims * self._mlp_ratio)
-#     self.mlp = LeFFN(hidden_features=mlp_hidden_dim, activation=self._activation, 
-#                    dropout=self._dropout, **self._init_args)
-  
-#   def call(self, x, mask_matrix = None, training = None):
-#     x = self.attention(x, 
-#             mask = mask_matrix, 
-#             training = training)
-
-#     if self.prenorm is not None:
-#       _, H, W, C = x.shape
-#       x_interem = tf.reshape(x, [-1, H * W, C])
-#       x_interem = self.prenorm(x_interem)
-#       x_interem = tf.reshape(x_interem, [-1, H, W, C])
-#     else:
-#       x_interem = x
-
-#     x_interem = self.mlp(x_interem)
-
-#     if training:
-#       x_interem = self.drop_path(x_interem)
-
-#     x = x + x_interem
-#     return x
-
 
 class LeFFN(tf.keras.layers.Layer):
 
@@ -678,7 +496,7 @@ class LeFFN(tf.keras.layers.Layer):
     hidden_features = self._hidden_features or input_shape[-1]
     out_features = self._out_features or input_shape[-1]
 
-    self.fc_expand = nn_blocks.ConvBN(filters = hidden_features, #out_features//2, 
+    self.fc_expand = nn_blocks.ConvBN(filters = hidden_features, 
                                       kernel_size = (1, 1), 
                                       strides = (1, 1), 
                                       padding = "same", 
@@ -686,13 +504,14 @@ class LeFFN(tf.keras.layers.Layer):
                                       use_bias = True,  
                                       use_sync_bn = USE_SYNC_BN,
                                       **self._init_args)
-
+    
     self.dw_spatial_sample = tf.keras.layers.DepthwiseConv2D((3, 3), 
                                                              strides = self._strides, 
                                                              padding = "same", 
                                                              use_bias = False, 
                                                              **self._init_args)
     self.norm_spatial_sample = self._norm_layer()
+
 
     self.fc_compress = nn_blocks.ConvBN(filters = out_features, 
                                         kernel_size = (1, 1), 
@@ -701,22 +520,89 @@ class LeFFN(tf.keras.layers.Layer):
                                         activation = None, 
                                         use_bias = True,  
                                         use_sync_bn = USE_SYNC_BN,
-                                        use_separable_conv = True,
                                         **self._init_args)
+
     self.act = _get_activation_fn(self._activation, leaky_alpha=self._leaky)
+
     return 
 
   def call(self, x):
-    x = self.fc_expand(x)
-    x = self.act(x)
-
+    # why does LeFFT do expantion then spatial?
     x = self.dw_spatial_sample(x)
     x = self.norm_spatial_sample(x)
+    x = self.act(x)
+
+    x = self.fc_expand(x)
     x = self.act(x)
 
     x = self.fc_compress(x)
     x = self.act(x)
     return x
+
+# class LeFFN(tf.keras.layers.Layer):
+
+#   def __init__(self, 
+#                hidden_features = None, 
+#                out_features = None, 
+#                kernel_initializer='TruncatedNormal',
+#                kernel_regularizer=None,
+#                bias_initializer='zeros',
+#                bias_regularizer=None,
+#                activation = "gelu", 
+#                leaky_alpha=0.1,
+#                dropout = 0.0, 
+#                **kwargs):
+#     super().__init__(**kwargs)
+
+#     # features 
+#     self._hidden_features = hidden_features
+#     self._out_features = out_features
+#     self._norm_layer = _get_norm_fn("batch_norm")
+
+#     # init and regularizer
+#     self._init_args = dict(
+#       kernel_initializer = _get_initializer(kernel_initializer),
+#       bias_initializer = bias_initializer,
+#       kernel_regularizer = kernel_regularizer,
+#       bias_regularizer = bias_regularizer,
+#     )
+
+#     # activation
+#     self._activation = activation
+#     self._leaky = leaky_alpha
+#     self._dropout = dropout
+
+#   def build(self, input_shape):
+#     hidden_features = self._hidden_features or input_shape[-1]
+#     out_features = self._out_features or input_shape[-1]
+
+#     self.fc_expand = nn_blocks.ConvBN(filters = hidden_features, 
+#                                       kernel_size = (1, 1), 
+#                                       strides = (1, 1), 
+#                                       padding = "same", 
+#                                       activation = None,
+#                                       use_bias = True,  
+#                                       **self._init_args)
+
+#     self.fc_compress = nn_blocks.ConvBN(filters = out_features, 
+#                                         kernel_size = (3, 3), 
+#                                         strides = (1, 1), 
+#                                         padding = "same", 
+#                                         activation = None, 
+#                                         use_bias = True,  
+#                                         use_separable_conv = True, 
+#                                         **self._init_args)
+#     self.act = _get_activation_fn(self._activation, leaky_alpha=self._leaky)
+
+#     return 
+
+#   def call(self, x):
+#     x = self.fc_expand(x)
+#     x = self.act(x)
+#     x = self.fc_compress(x)
+#     x = self.act(x)
+#     return x
+
 
 class SwinTransformerLayer(tf.keras.layers.Layer):
 
@@ -798,13 +684,12 @@ class SwinTransformerLayer(tf.keras.layers.Layer):
     mlp_hidden_dim = int(self._dims * self._mlp_ratio)
     self.mlp = LeFFN(hidden_features=mlp_hidden_dim, activation=self._activation, 
                    dropout=self._dropout, **self._init_args)
-    
-    self.act = _get_activation_fn('gelu')
   
   def call(self, x, mask_matrix = None, training = None):
     x = self.attention(x, 
             mask = mask_matrix, 
-            training = training) # empahsize significant items
+            training = training, 
+            flatten = self.prenorm is not None)
 
     if self.prenorm is not None:
       _, H, W, C = x.shape
@@ -814,13 +699,400 @@ class SwinTransformerLayer(tf.keras.layers.Layer):
     else:
       x_interem = x
 
-    # x_interem = self.act(x)
     x_interem = self.mlp(x_interem)
-    # x = self.act(x + x_interem)
-    x = x + x_interem
 
-    # x = self.act(x)
+    if training:
+      x_interem = self.drop_path(x_interem)
+
+    x = x + x_interem
     return x
+
+# class SwinTransformerLayer(tf.keras.layers.Layer):
+
+#   def __init__(self, 
+#                num_heads, 
+#                window_size = 7, 
+#                shift_size = 0, 
+#                mlp_ratio = 4, 
+#                qkv_bias = True, 
+#                qk_scale = None, 
+#                dropout = 0.0, 
+#                attention_dropout = 0.0, 
+#                drop_path = 0.0, 
+#                activation = 'gelu',
+#                norm_layer = 'layer_norm',
+#                kernel_initializer='TruncatedNormal',
+#                kernel_regularizer=None,
+#                bias_initializer='zeros',
+#                bias_regularizer=None, 
+#                **kwargs):
+#     super().__init__(**kwargs)
+
+#     self._num_heads = num_heads
+#     self._window_size = window_size
+#     self._shift_size = shift_size
+    
+#     self._mlp_ratio = mlp_ratio
+#     self._qkv_bias = qkv_bias
+#     self._qk_scale = qk_scale
+    
+#     self._dropout = dropout 
+#     self._attention_dropout = attention_dropout
+#     self._drop_path = drop_path
+
+#     self._activation = activation
+#     self._norm_layer_key = "batch_norm"
+#     self._norm_layer = _get_norm_fn("batch_norm")
+
+#     # init and regularizer
+#     self._init_args = dict(
+#       kernel_initializer = _get_initializer(kernel_initializer),
+#       bias_initializer = bias_initializer,
+#       kernel_regularizer = kernel_regularizer,
+#       bias_regularizer = bias_regularizer,
+#     )
+    
+#   def build(self, input_shape):
+#     self._dims = input_shape[-1]
+
+#     self.attention = ShiftedWindowMultiHeadAttention(
+#       window_size=self._window_size, 
+#       num_heads=self._num_heads, 
+#       use_shortcut=True, 
+#       pre_norm=None, 
+#       shift_size=self._shift_size, 
+#       qkv_bias=self._qkv_bias, 
+#       qk_scale=self._qk_scale, 
+#       attention_dropout=self._attention_dropout, 
+#       projection_dropout=self._dropout
+#     )
+
+#     if self._drop_path > 0.0:
+#       self.drop_path = nn_layers.StochasticDepth(self._drop_path)
+#     else:
+#       self.drop_path = Identity()
+    
+    
+#     mlp_hidden_dim = int(self._dims * self._mlp_ratio)
+#     self.mlp = MLP(hidden_features=mlp_hidden_dim, activation=self._activation, 
+#                    dropout=self._dropout, **self._init_args)
+
+
+#     # self.norm1 = self._norm_layer()
+#     self.norm2 = self._norm_layer()
+  
+#   def call(self, x, mask_matrix = None, training = None):
+#     _, H, W, C = x.shape
+#     x = self.attention(x, mask = mask_matrix, training = training, flatten = False)
+#     # x = self.norm1(x)
+
+#     x_interem = tf.reshape(x, [-1, H * W, C])
+#     x_interem = self.mlp(x_interem)
+#     x_interem = tf.reshape(x_interem, [-1, H, W, C])
+#     x_interem = self.norm2(x_interem)
+
+#     if training:
+#       x_interem = self.drop_path(x_interem)
+
+#     x = x + x_interem
+#     return x
+
+# class SwinTransformerLayer(tf.keras.layers.Layer):
+
+#   def __init__(self, 
+#                num_heads, 
+#                window_size = 7, 
+#                shift_size = 0, 
+#                mlp_ratio = 4, 
+#                qkv_bias = True, 
+#                qk_scale = None, 
+#                dropout = 0.0, 
+#                attention_dropout = 0.0, 
+#                drop_path = 0.0, 
+#                activation = 'gelu',
+#                norm_layer = 'layer_norm',
+#                kernel_initializer='TruncatedNormal',
+#                kernel_regularizer=None,
+#                bias_initializer='zeros',
+#                bias_regularizer=None, 
+#                **kwargs):
+#     super().__init__(**kwargs)
+
+#     self._num_heads = num_heads
+#     self._window_size = window_size
+#     self._shift_size = shift_size
+    
+#     self._mlp_ratio = mlp_ratio
+#     self._qkv_bias = qkv_bias
+#     self._qk_scale = qk_scale
+    
+#     self._dropout = dropout 
+#     self._attention_dropout = attention_dropout
+#     self._drop_path = drop_path
+
+#     self._activation = activation
+#     self._norm_layer_key = norm_layer
+#     self._norm_layer = _get_norm_fn(norm_layer)
+
+#     # init and regularizer
+#     self._init_args = dict(
+#       kernel_initializer = _get_initializer(kernel_initializer),
+#       bias_initializer = bias_initializer,
+#       kernel_regularizer = kernel_regularizer,
+#       bias_regularizer = bias_regularizer,
+#     )
+    
+#   def build(self, input_shape):
+#     self._dims = input_shape[-1]
+
+#     self.attention = ShiftedWindowMultiHeadAttention(
+#       window_size=self._window_size, 
+#       num_heads=self._num_heads, 
+#       use_shortcut=True, 
+#       pre_norm=self._norm_layer_key, 
+#       shift_size=self._shift_size, 
+#       qkv_bias=self._qkv_bias, 
+#       qk_scale=self._qk_scale, 
+#       attention_dropout=self._attention_dropout, 
+#       projection_dropout=self._dropout
+#     )
+
+#     if self._drop_path > 0.0:
+#       self.drop_path = nn_layers.StochasticDepth(self._drop_path)
+#     else:
+#       self.drop_path = Identity()
+    
+#     self.norm2 = self._norm_layer()
+#     mlp_hidden_dim = int(self._dims * self._mlp_ratio)
+#     self.mlp = MLP(hidden_features=mlp_hidden_dim, activation=self._activation, 
+#                    dropout=self._dropout, **self._init_args)
+  
+#   def call(self, x, mask_matrix = None, training = None):
+#     _, H, W, C = x.shape
+#     x = self.attention(x, mask = mask_matrix, training = training, flatten = True)
+
+#     x = tf.reshape(x, [-1, H * W, C])
+
+#     if training:
+#       x = x + self.drop_path(self.mlp(self.norm2(x)))
+#     else:
+#       x = x + self.mlp(self.norm2(x))
+
+#     # Reshape from vector to Image
+#     x = tf.reshape(x, [-1, H, W, C])
+#     return x
+
+
+# class SwinTransformerLayer(tf.keras.layers.Layer):
+
+#   def __init__(self, 
+#                num_heads, 
+#                window_size = 7, 
+#                shift_size = 0, 
+#                mlp_ratio = 4, 
+#                qkv_bias = True, 
+#                qk_scale = None, 
+#                dropout = 0.0, 
+#                attention_dropout = 0.0, 
+#                drop_path = 0.0, 
+#                activation = 'gelu',
+#                norm_layer = 'layer_norm',
+#                kernel_initializer='TruncatedNormal',
+#                kernel_regularizer=None,
+#                bias_initializer='zeros',
+#                bias_regularizer=None, 
+#                **kwargs):
+#     super().__init__(**kwargs)
+
+#     self._num_heads = num_heads
+#     self._window_size = window_size
+#     self._shift_size = shift_size
+    
+#     self._mlp_ratio = mlp_ratio
+#     self._qkv_bias = qkv_bias
+#     self._qk_scale = qk_scale
+    
+#     self._dropout = dropout 
+#     self._attention_dropout = attention_dropout
+#     self._drop_path = drop_path
+
+#     self._activation = activation
+#     self._norm_layer = _get_norm_fn(norm_layer)
+
+#     # init and regularizer
+#     self._init_args = dict(
+#       kernel_initializer = _get_initializer(kernel_initializer),
+#       bias_initializer = bias_initializer,
+#       kernel_regularizer = kernel_regularizer,
+#       bias_regularizer = bias_regularizer,
+#     )
+    
+#   def build(self, input_shape):
+#     self._dims = input_shape[-1]
+
+#     if min(input_shape[1:-1]) <= self._window_size:
+#       # we cannot shift and the eindow size must be the input resolution 
+#       self._shift_size = 0
+#       self._window_size = min(input_shape[1:-1])
+    
+#     if not (0 <= self._shift_size < self._window_size):
+#       raise ValueError("the shift must be contained between 0 and wndow_size "
+#                         "or the image will be shifted outside of the partition " 
+#                         "window. ")
+    
+#     self.norm1 = self._norm_layer()
+#     self.attention_layer = WindowedMultiHeadAttention(
+#         window_size=self._window_size, 
+#         num_heads=self._num_heads, 
+#         qkv_bias=self._qkv_bias, 
+#         qk_scale=self._qk_scale, 
+#         attention_dropout=self._attention_dropout, 
+#         projection_dropout=self._dropout, 
+#         **self._init_args)
+
+#     if self._drop_path > 0.0:
+#       self.drop_path = nn_layers.StochasticDepth(self._drop_path)
+#     else:
+#       self.drop_path = Identity()
+    
+#     self.norm2 = self._norm_layer()
+#     mlp_hidden_dim = int(self._dims * self._mlp_ratio)
+#     self.mlp = MLP(hidden_features=mlp_hidden_dim, activation=self._activation, 
+#                    dropout=self._dropout, **self._init_args)
+  
+#   def call(self, x, mask_matrix = None, training = None):
+#     _, H, W, C = x.shape
+  
+#     # squeeze to [B, H * W, C]
+#     x = tf.reshape(x, [-1, H * W, C])
+    
+#     # save normalsize and reshape
+#     shortcut = x
+#     x = self.norm1(x)
+#     x = tf.reshape(x, [-1, H, W, C])
+
+#     # pad feature maps to multiples of window size
+#     pad_l = pad_t = 0 
+#     pad_r = (self._window_size - W % self._window_size) % self._window_size
+#     pad_b = (self._window_size - H % self._window_size) % self._window_size  
+#     x = tf.pad(x, [[0,0], [pad_t, pad_b], [pad_l, pad_r], [0, 0]]) 
+#     _, Hp, Wp, _ = x.shape
+
+#     # cyclic shift 
+#     if self._shift_size != 0:
+#       shifted_x = tf.roll(x, shift=[-self._shift_size, -self._shift_size], axis = [1, 2])
+#       attn_mask = mask_matrix   
+#     else:
+#       shifted_x = x
+#       attn_mask = None 
+    
+#     # partition windows
+#     x_windows = window_partition(shifted_x, self._window_size) # nW*B, window_size, window_size, C
+#     x_windows = tf.reshape(x_windows, [-1, self._window_size * self._window_size, C]) # nW*B, window_size*window_size, C
+
+#     attn_windows = self.attention_layer(x_windows, mask = attn_mask)
+
+#     attn_windows = tf.reshape(attn_windows, [-1, self._window_size, self._window_size, C]) # nW*B, window_size*window_size, C
+#     shifted_x = window_reverse(attn_windows, self._window_size, Hp, Wp) # B H' W' C
+
+#     if self._shift_size != 0:
+#       x = tf.roll(shifted_x, shift=[self._shift_size, self._shift_size], axis = [1, 2])
+#     else:
+#       x = shifted_x
+
+#     if pad_r > 0 or pad_b > 0:
+#       x = x[:, :H, :W, :]
+
+#     # Squeeze to Vector
+#     x = tf.reshape(x, [-1, H * W, C])
+
+#     # Feed Forward Network
+#     x = shortcut + self.drop_path(x)
+#     x = x + self.drop_path(self.mlp(self.norm2(x)))
+
+#     # Reshape from vector to Image
+#     x = tf.reshape(x, [-1, H, W, C])
+#     return x
+
+# class PatchMerge(tf.keras.layers.Layer):
+
+#   def __init__(self,
+#                norm_layer = 'layer_norm',
+#                kernel_initializer='TruncatedNormal',
+#                kernel_regularizer=None,
+#                bias_initializer='zeros',
+#                bias_regularizer=None, 
+#                **kwargs):
+#     super().__init__(**kwargs)
+
+#     #default
+#     self._norm_layer = _get_norm_fn("batch_norm")
+
+#     # init and regularizer
+#     self._init_args = dict(
+#       kernel_initializer = _get_initializer(kernel_initializer),
+#       bias_initializer = bias_initializer,
+#       kernel_regularizer = kernel_regularizer,
+#       bias_regularizer = bias_regularizer,
+#     )
+  
+#   def build(self, input_shape):
+#     self._dims = input_shape[-1]
+#     self.reduce = nn_blocks.ConvBN(filters = self._dims * 2, 
+#                                         kernel_size = (3, 3), 
+#                                         strides = (2, 2), 
+#                                         padding = "same", 
+#                                         activation = None, 
+#                                         use_bias = False,  
+#                                         use_separable_conv = True, 
+#                                         **self._init_args)
+    
+    
+  
+#   def call(self, x):
+#     """Down sample by 2. """
+#     x = self.reduce(x)
+#     return x
+
+# class PatchMerge(tf.keras.layers.Layer):
+
+#   def __init__(self,
+#                norm_layer = 'layer_norm',
+#                kernel_initializer='TruncatedNormal',
+#                kernel_regularizer=None,
+#                bias_initializer='zeros',
+#                bias_regularizer=None, 
+#                **kwargs):
+#     super().__init__(**kwargs)
+
+#     #default
+#     self._norm_layer = _get_norm_fn("batch_norm")
+
+#     # init and regularizer
+#     self._init_args = dict(
+#       use_bias = False,
+#       kernel_initializer = _get_initializer(kernel_initializer),
+#       bias_initializer = bias_initializer,
+#       kernel_regularizer = kernel_regularizer,
+#       bias_regularizer = bias_regularizer,
+#     )
+  
+#   def build(self, input_shape):
+#     self._dims = input_shape[-1]
+#     self.reduce = nn_blocks.ConvBN(filters = self._dims * 2, 
+#                                         kernel_size = (1, 1), 
+#                                         strides = (1, 1), 
+#                                         padding = "same", 
+#                                         activation = None, 
+#                                         use_separable_conv = True, 
+#                                         **self._init_args)
+    
+  
+#   def call(self, x):
+#     """Down sample by 2. """
+#     x = tf.nn.space_to_depth(x, 2)
+#     x = self.reduce(x)
+#     return x
 
 class PatchMerge(tf.keras.layers.Layer):
 
@@ -1057,7 +1329,7 @@ class SwinTransformerBlock(tf.keras.layers.Layer):
     attn_mask = self._build_mask(x.shape, dtype = x.dtype)
 
     for layer in self.layers:
-      x = layer(x) #, mask_matrix = attn_mask)
+      x = layer(x, mask_matrix = attn_mask)
 
     x_down = x
     if self.downsample is not None:

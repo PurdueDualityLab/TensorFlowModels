@@ -6,21 +6,6 @@ task:
   model:
     num_classes: 10
     input_size: [32, 32, 3]
-
-    # backbone:
-    #   type: 'swin'
-    #   swin:
-    #     min_level: null
-    #     max_level: null
-    #     patch_size: 2
-    #     embed_dims: 72
-    #     window_size: [8, 8] 
-    #     depths: [2, 2]
-    #     num_heads: [4, 4]
-    #     drop_path: 0.0
-    #     absolute_positional_embed: False
-    #     normalize_endpoints: False
-    #     mlp_ratio: 0.5
     backbone:
       type: 'swin'
       swin:
@@ -29,12 +14,13 @@ task:
         patch_size: 2
         embed_dims: 64 
         window_size: [8, 8] 
-        depths: [2, 2]
+        # depths: [2, 2]
+        depths: [1, 1]
         num_heads: [4, 4]
         drop_path: 0.0
         absolute_positional_embed: False
         normalize_endpoints: False
-        mlp_ratio: [2, 0.5]
+        mlp_ratio: [2, 2]
     norm_activation:
       activation: 'gelu'
   losses:
@@ -66,10 +52,6 @@ trainer:
   summary_interval: 1000
   checkpoint_interval: 1000
   optimizer_config:
-    # ema: 
-    #   average_decay: 0.9999
-    #   trainable_weights_only: False
-    #   dynamic_decay: True
     optimizer:
       type: 'adam'
       adam:
