@@ -841,34 +841,6 @@ class SwinTransformerBlock(tf.keras.layers.Layer):
       self.downsample = PatchMerge(norm_layer=self._norm_layer_key, **self._init_args)
     else:
       self.downsample = None
-    
-    # clarity on what this is and why is needed, is it 
-    # just masking the locations to consider post shift so pixels rolled "out"
-    # of the image get set to zero? we need to visualize this somehow.
-    H, W = input_shape[1:-1]
-    self.Hp = int(np.ceil(H / self._window_size) * self._window_size)
-    self.Wp = int(np.ceil(W / self._window_size) * self._window_size)
-    img_mask = np.zeros((1, self.Hp, self.Wp, 1))
-
-    h_slices = (
-      slice(0, -self._window_size), 
-      slice(-self._window_size, -self._shift_size), 
-      slice(-self._shift_size, None)
-    )
-    w_slices = (
-      slice(0, -self._window_size), 
-      slice(-self._window_size, -self._shift_size), 
-      slice(-self._shift_size, None)
-    )
-
-    cnt = 0 
-    for h in h_slices: 
-      for w in w_slices:
-        img_mask[:, h, w, :] = cnt 
-        cnt += 1
-
-    img_mask = tf.convert_to_tensor(img_mask)
-    self.img_mask = img_mask
     return 
 
   def call(self, x):
