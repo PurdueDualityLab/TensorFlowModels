@@ -1170,10 +1170,11 @@ class SPP(tf.keras.layers.Layer):
   A non-agregated SPP layer that uses Pooling.
   """
 
-  def __init__(self, sizes, **kwargs):
+  def __init__(self, sizes, strides = (1, 1), **kwargs):
     self._sizes = list(reversed(sizes))
     if not sizes:
       raise ValueError('More than one maxpool should be specified in SSP block')
+    self._strides = strides
     super().__init__(**kwargs)
 
   def build(self, input_shape):
@@ -1182,7 +1183,7 @@ class SPP(tf.keras.layers.Layer):
       maxpools.append(
           tf.keras.layers.MaxPool2D(
               pool_size=(size, size),
-              strides=(1, 1),
+              strides=self._strides,
               padding='same',
               data_format=None))
     self._maxpools = maxpools

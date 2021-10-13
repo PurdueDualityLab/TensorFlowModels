@@ -13,16 +13,18 @@ task:
         min_level: 3
         max_level: 5
         patch_size: 4
+        embed_dims: 108
+        num_heads: [3, 6, 12, 24]
         # embed_dims: 96
         # num_heads: [3, 6, 12, 24]
-        embed_dims: 128
-        num_heads: [4, 8, 16, 32]
+        # embed_dims: 128
+        # num_heads: [4, 8, 16, 32]
         window_size: [8, 8, 8, 8]
         depths: [1, 2, 3, 1]
         drop_path: 0.0
         absolute_positional_embed: False
         normalize_endpoints: True
-        mlp_ratio: [2, 2, 4, 4]
+        mlp_ratio: [4, 4, 4, 4]
     decoder:
       type: yolo_decoder
       yolo_decoder:

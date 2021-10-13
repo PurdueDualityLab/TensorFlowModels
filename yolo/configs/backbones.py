@@ -31,7 +31,7 @@ class Swin(hyperparams.Config):
   qk_scale: bool = None
   dropout: float = 0.0
   attention_dropout: float = 0.0
-  drop_path: float = 0.1
+  drop_path: float = 0.0
   absolute_positional_embed: bool = False
   normalize_endpoints: bool = True
   norm_layer: str = 'layer_norm'
