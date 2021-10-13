@@ -566,7 +566,11 @@ class LeFFN(tf.keras.layers.Layer):
     hidden_features = self._hidden_features or input_shape[-1]
     out_features = self._out_features or input_shape[-1]
 
-    self.dw_spatial_sample = SPP([3], strides = 1, cat_input = True, **self._init_args) # per layer spatial binning
+    self.dw_spatial_sample = tf.keras.layers.DepthwiseConv2D((3, 3), 
+                                                             strides = self._strides, 
+                                                             padding = "same", 
+                                                             use_bias = False, 
+                                                             **self._init_args)
     self.norm_spatial_sample = self._norm_layer()
 
     self.fc_expand = nn_blocks.ConvBN(filters = hidden_features,
