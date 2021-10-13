@@ -11,10 +11,10 @@ task:
         min_level: 3
         max_level: 5
         patch_size: 4
-        mlp_ratio: 4.0
+        mlp_ratio: [4, 4, 4, 4]
         embed_dims: 96 
         window_size: [7, 7, 7, 7] 
-        depths: [2, 2, 6, 2]
+        depths: [1, 2, 3, 1]
         num_heads: [3, 6, 12, 24]
         drop_path: 0.2
         absolute_positional_embed: False
