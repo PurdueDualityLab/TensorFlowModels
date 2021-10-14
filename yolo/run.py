@@ -18,6 +18,7 @@ from official.core import train_utils
 from yolo.common import registry_imports
 # pylint: enable=unused-import
 from official.common import flags as tfm_flags
+from official.modeling.optimization import ExponentialMovingAverage
 
 from typing import Tuple, List
 from official.core import train_utils
@@ -31,6 +32,7 @@ from yolo.serving import detect
 import tensorflow as tf
 from skimage import io
 import cv2
+from official.common import distribute_utils
 
 '''
 python3.8 -m yolo.run --experiment=yolo_custom --config_file=yolo/configs/experiments/yolov4-csp/inference/640.yaml --model_dir ../checkpoints/640-baseline-e13/ --file ../../Videos/korea.mp4 --save_file ../../Videos/korea-detect.avi --batch_size 1 --buffer_size 100 
@@ -115,6 +117,10 @@ def load_model(experiment='yolo_custom', config_path=[], model_dir=''):
     ckpt = tf.train.Checkpoint(model=model, optimizer=optimizer)
     status = ckpt.restore(tf.train.latest_checkpoint(model_dir))
 
+    if isinstance(optimizer, ExponentialMovingAverage):
+      print("swapping")
+      optimizer.swap_weights()
+
     # status.expect_partial().assert_existing_objects_matched()
     print(dir(status), status)
   else:
@@ -131,20 +137,22 @@ def load_flags(CFG):
     performance.set_mixed_precision_policy(params.runtime.mixed_precision_dtype,
                                            params.runtime.loss_scale)
 
+  distribution_strategy = distribute_utils.get_distribution_strategy(
+      distribution_strategy=params.runtime.distribution_strategy,
+      all_reduce_alg=params.runtime.all_reduce_alg,
+      num_gpus=params.runtime.num_gpus,
+      tpu_address=params.runtime.tpu)
+
   task = task_factory.get_task(params.task, logging_dir=model_dir)
   model = task.build_model(batch_size = CFG.batch_size)
 
   if model_dir is not None and model_dir != '':
     optimizer = task.create_optimizer(params.trainer.optimizer_config,
                                       params.runtime)
-    # optimizer = tf.keras.mixed_precision.LossScaleOptimizer(tf.keras.optimizers.SGD(), dynamic = True)
+
     ckpt = tf.train.Checkpoint(model=model, optimizer=optimizer)
     status = ckpt.restore(tf.train.latest_checkpoint(model_dir))
 
-    # try:
-    #   status.expect_partial().assert_existing_objects_matched()
-    # except:
-    #   print("this checkpoint could not assert all components consumed, componnets may not match")
     print(dir(status), status)
   else:
     task.initialize(model)

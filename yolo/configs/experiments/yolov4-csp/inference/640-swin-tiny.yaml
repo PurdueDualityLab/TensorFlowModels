@@ -45,7 +45,7 @@ task:
       scale_xy:
         'all': 2.0
       max_boxes: 300
-      nms_type: tflite
+      nms_type: greedy
       iou_thresh: 0.25
       nms_thresh: 0.45
       pre_nms_points: 500
@@ -89,7 +89,7 @@ task:
       aug_rand_translate: 0.1
       area_thresh: 0.1
   validation_data:
-    global_batch_size: 1
+    global_batch_size: 8
     input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
 trainer:
   train_steps: 351563  # epochs: 120
@@ -99,7 +99,11 @@ trainer:
   summary_interval: 9250
   checkpoint_interval: 1850
   optimizer_config:
-    ema: null
+    # ema: null
+    ema:
+      average_decay: 0.9999
+      trainable_weights_only: False
+      dynamic_decay: True
     optimizer:
       type: 'adamw'
       adamw:
