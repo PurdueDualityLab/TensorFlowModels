@@ -46,8 +46,8 @@ task:
         'all': 2.0
       max_boxes: 300
       nms_type: greedy
-      iou_thresh: 0.25
-      nms_thresh: 0.45
+      iou_thresh: 0.15
+      nms_thresh: 0.6
       pre_nms_points: 500
     loss:
       use_scaled_loss: true

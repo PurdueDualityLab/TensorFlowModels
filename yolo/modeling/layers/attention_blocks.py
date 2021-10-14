@@ -396,8 +396,10 @@ class ShiftedWindowMultiHeadAttention(tf.keras.layers.Layer):
     x = tf.pad(x, [[0,0], [pad_t, pad_b], [pad_l, pad_r], [0, 0]]) 
     _, Hp, Wp, _ = x.shape
 
-    if self._shift:
+    if self._shift  == True:
       shifts = [(0, 0), (-self._shift_size, -self._shift_size)] # 6 ms latency, 9 ms latency 
+    elif self._shift is None:
+      shifts = [(-self._shift_size, -self._shift_size)]
     else:
       shifts = [(0, 0)] # 6 ms latency
 
@@ -832,7 +834,7 @@ class SwinTransformerBlock(tf.keras.layers.Layer):
       
       drop_path = self._drop_path[i] if index_drop_path else self._drop_path
 
-      shift = SHIFT if not ALT_SHIFTS else shift_size != 0
+      shift = SHIFT if not ALT_SHIFTS else (None if shift_size != 0 else False)
       layer = SwinTransformerLayer(self._num_heads, 
                                    window_size=window_size,
                                    shift_size=shift_size, 
