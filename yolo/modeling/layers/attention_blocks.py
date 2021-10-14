@@ -26,7 +26,7 @@ from functools import partial
 USE_SYNC_BN = True
 SHIFT = True
 ALT_SHIFTS = False
-CAT_INPUT = False
+CAT_INPUT = True
 
 def _get_activation_fn(activation, leaky_alpha = 0.1):
   if activation == 'leaky':
