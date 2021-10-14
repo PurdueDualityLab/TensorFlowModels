@@ -25,7 +25,6 @@ from functools import partial
 
 USE_SYNC_BN = True
 SHIFT = True
-CAT_INPUT = True
 
 def _get_activation_fn(activation, leaky_alpha = 0.1):
   if activation == 'leaky':
@@ -725,7 +724,7 @@ class PatchMerge(tf.keras.layers.Layer):
     self._dims = input_shape[-1]
 
     self.expand = SPP(self._spp_keys, strides = 2, cat_input = False) #, use_bn=True) # per layer spatial binning
-    self.reduce = nn_blocks.ConvBN(filters = self._dims * self._filter_scale, # point wise token expantion
+    self.reduce = nn_blocks.ConvBN(filters = int(self._dims * self._filter_scale), # point wise token expantion
                                         kernel_size = (1, 1), 
                                         strides = (1, 1), 
                                         padding = "same", 
@@ -810,6 +809,12 @@ class SwinTransformerBlock(tf.keras.layers.Layer):
     self.layers = []
 
     index_drop_path = isinstance(self._drop_path, List)
+    self._cat_offset = 1
+    if self._concat:
+      num_heads = self._num_heads - self._cat_offset
+    else:
+      num_heads = self._num_heads
+
     for i in range(self._depth):
       if self._ignore_shifts:
         shift_size = 0
@@ -821,11 +826,6 @@ class SwinTransformerBlock(tf.keras.layers.Layer):
       drop_path = self._drop_path[i] if index_drop_path else self._drop_path
 
       shift = SHIFT if not self._alt_shifts else (None if shift_size != 0 else False)
-
-      if self._concat:
-        num_heads = self._num_heads - 1
-      else:
-        num_heads = self._num_heads
 
       layer = SwinTransformerLayer(num_heads, 
                                    window_size=window_size,
@@ -845,9 +845,8 @@ class SwinTransformerBlock(tf.keras.layers.Layer):
   def call(self, x):
     
     if self._concat:
-      _, _, _, C = x.shape
-      dims = C // self._num_heads
-      shortcut, x = tf.split(x, [1 * dims, (self._num_heads - 1) * dims], axis = -1)
+      dims = x.shape[-1] // self._num_heads
+      shortcut, x = tf.split(x, [self._cat_offset * dims, (self._num_heads - self._cat_offset) * dims], axis = -1)
 
     for layer in self.layers:
       x = layer(x) 
@@ -911,7 +910,7 @@ class PatchEmbed(tf.keras.layers.Layer):
     )
     
     if self._patch_size == 4:
-      #self.sample = tf.keras.layers.MaxPool2D(pool_size=(3, 3), strides=(2,2), padding = "same")
+      # self.sample = tf.keras.layers.MaxPool2D(pool_size=(3, 3), strides=(2,2), padding = "same")
       self.sample = SPP([3], strides = 2, cat_input = False, use_bn=True, unweighted=False)
       # self.sample = PatchMerge(filter_scale=1, spp_keys=[1, 3])
     

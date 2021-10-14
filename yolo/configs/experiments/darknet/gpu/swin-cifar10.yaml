@@ -14,16 +14,16 @@ task:
         patch_size: 2
         embed_dims: 64 
         window_size: [8, 8] 
-        # depths: [2, 2]
-        depths: [1, 1]
+        depths: [2, 2]
+        # depths: [1, 1]
         num_heads: [4, 4]
         drop_path: 0.00
         absolute_positional_embed: False
         normalize_endpoints: False
-        mlp_ratio: [2, 0.5]
+        mlp_ratio: [2, 2]
         cat_input: True
         alt_shifts: False
-        concat: False
+        concat: True
     norm_activation:
       activation: 'mish'
   losses:

@@ -7,6 +7,7 @@ task:
   model:
     darknet_based_model: False
     input_size: [640, 640, 3]
+    # input_size: [512, 512, 3]
     backbone:
       type: 'swin'
       swin:
@@ -18,12 +19,13 @@ task:
         embed_dims: 128
         num_heads: [4, 8, 16, 32]
         window_size: [8, 8, 8, 8]
-        depths: [1, 2, 3, 1]
+        depths: [1, 1, 3, 1]
         drop_path: 0.0
         absolute_positional_embed: False
         normalize_endpoints: True
         mlp_ratio: [2, 2, 2, 2]
         alt_shifts: False
+        cat_input: True
         concat: True
     decoder:
       type: yolo_decoder
@@ -43,7 +45,7 @@ task:
       scale_xy:
         'all': 2.0
       max_boxes: 300
-      nms_type: tflite
+      nms_type: greedy
       iou_thresh: 0.25
       nms_thresh: 0.45
       pre_nms_points: 500

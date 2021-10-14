@@ -13,12 +13,6 @@ task:
         min_level: 3
         max_level: 5
         patch_size: 4
-        # embed_dims: 108
-        # num_heads: [3, 6, 12, 24]
-        # embed_dims: 96
-        # num_heads: [3, 6, 12, 24]
-        # embed_dims: 128
-        # num_heads: [4, 8, 16, 32]
         embed_dims: 64
         num_heads: [2, 4, 8, 16]
         window_size: [8, 8, 8, 8]
@@ -27,6 +21,9 @@ task:
         absolute_positional_embed: False
         normalize_endpoints: True
         mlp_ratio: [2, 2, 2, 2]
+        cat_input: True
+        alt_shifts: False
+        concat: False
     decoder:
       type: yolo_decoder
       yolo_decoder:
@@ -46,8 +43,8 @@ task:
         'all': 2.0
       max_boxes: 300
       nms_type: greedy
-      iou_thresh: 0.15
-      nms_thresh: 0.6
+      iou_thresh: 0.25
+      nms_thresh: 0.45
       pre_nms_points: 500
     loss:
       use_scaled_loss: true

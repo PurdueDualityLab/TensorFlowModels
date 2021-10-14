@@ -25,7 +25,7 @@ task:
         absolute_positional_embed: False
         normalize_endpoints: True
         mlp_ratio: [4, 4, 4, 4]
-        alt_shifts: False
+        alt_shifts: True
     decoder:
       type: yolo_decoder
       yolo_decoder:

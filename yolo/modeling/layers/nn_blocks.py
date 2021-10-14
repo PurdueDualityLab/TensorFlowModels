@@ -55,6 +55,7 @@ class ConvBN(tf.keras.layers.Layer):
                bias_regularizer=None,
                kernel_regularizer=None,
                use_separable_conv=False,
+               use_depthwise_conv=False, 
                use_bias=None, 
                use_bn=True,
                use_sync_bn=False,
@@ -123,12 +124,15 @@ class ConvBN(tf.keras.layers.Layer):
     if not isinstance(ksize, List) and not isinstance(ksize, Tuple):
       ksize = [ksize]
 
+    self._use_depthwise_conv = use_depthwise_conv
     self._use_separable_conv = use_separable_conv and not all([a == 1 for a in ksize])
     self._use_sync_bn = use_sync_bn
     self._norm_momentum = norm_momentum
     self._norm_epsilon = norm_epsilon
 
-    if self._use_separable_conv:
+    if self._use_depthwise_conv:
+      self._conv_base = tf.keras.layers.DepthwiseConv2D
+    elif self._use_separable_conv:
       self._conv_base = tf.keras.layers.SeparableConv2D
     else:
       self._conv_base = tf.keras.layers.Conv2D
@@ -158,8 +162,7 @@ class ConvBN(tf.keras.layers.Layer):
     else:
       use_bias = self._use_bias
 
-    self.conv = self._conv_base(
-        filters=self._filters,
+    kwargs = dict(
         kernel_size=self._kernel_size,
         strides=self._strides,
         padding=self._padding,
@@ -168,7 +171,17 @@ class ConvBN(tf.keras.layers.Layer):
         kernel_initializer=self._kernel_initializer,
         bias_initializer=self._bias_initializer,
         kernel_regularizer=self._kernel_regularizer,
-        bias_regularizer=self._bias_regularizer)
+        bias_regularizer=self._bias_regularizer
+      )
+
+    if not self._use_depthwise_conv:
+      kwargs.update(
+        dict(
+          filters=self._filters,
+        )
+      )
+
+    self.conv = self._conv_base(**kwargs)
 
     if self._use_bn:
       self.bn = self._bn_base(
@@ -217,23 +230,28 @@ class ConvBN(tf.keras.layers.Layer):
       else:
         conv_bias = None
       gamma, beta, moving_mean, moving_variance = self.bn.get_weights()
+      base = tf.sqrt(self._norm_epsilon + moving_variance)
 
       self.conv.use_bias = True 
       infilters = conv_weights.shape[-2]
       self.conv.build([None, None, None, infilters])
 
-      base = tf.sqrt(self._norm_epsilon + moving_variance)
-      w_conv_base = tf.transpose(conv_weights, perm = (3, 2, 0, 1))
-      w_conv = tf.reshape(w_conv_base, [conv_weights.shape[-1], -1])
-      
-      w_bn = tf.linalg.diag(gamma/base)
-      w_conv = tf.reshape(tf.matmul(w_bn, w_conv), w_conv_base.get_shape())
-      w_conv = tf.transpose(w_conv, perm = (2, 3, 1, 0))
+      if not self._use_depthwise_conv:
+        w_conv_base = tf.transpose(conv_weights, perm = (3, 2, 0, 1))
+        w_conv = tf.reshape(w_conv_base, [conv_weights.shape[-1], -1])
+        
+        w_bn = tf.linalg.diag(gamma/base)
+        w_conv = tf.reshape(tf.matmul(w_bn, w_conv), w_conv_base.get_shape())
+        w_conv = tf.transpose(w_conv, perm = (2, 3, 1, 0))
+      else:
+        base_ = tf.reshape(base, [1, 1, base.shape[0], 1])
+        gamma_ = tf.reshape(gamma, [1, 1, gamma.shape[0], 1])
+        w_conv = conv_weights * gamma_/base_ 
 
-      b_bn = beta - gamma *  moving_mean/base
-      
       if conv_bias is not None:
-        b_bn = conv_bias + b_bn
+        b_bn = beta + (conv_bias - moving_mean) * gamma/base
+      else:
+        b_bn = beta - moving_mean * gamma/base
 
       if self._use_separable_conv:
         self.conv.set_weights([dw_conv_weights, w_conv, b_bn])
