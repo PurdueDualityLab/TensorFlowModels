@@ -26,6 +26,7 @@ from functools import partial
 USE_SYNC_BN = True
 SHIFT = True
 ALT_SHIFTS = False
+CAT_INPUT = False
 
 def _get_activation_fn(activation, leaky_alpha = 0.1):
   if activation == 'leaky':
@@ -567,7 +568,7 @@ class LeFFN(tf.keras.layers.Layer):
     hidden_features = self._hidden_features or input_shape[-1]
     out_features = self._out_features or input_shape[-1]
 
-    self.dw_spatial_sample = SPP([3], strides = 1, cat_input = True, **self._init_args) # per layer spatial binning
+    self.dw_spatial_sample = SPP([3], strides = 1, cat_input = CAT_INPUT, **self._init_args) # per layer spatial binning
     self.norm_spatial_sample = self._norm_layer()
 
     self.fc_expand = nn_blocks.ConvBN(filters = hidden_features,

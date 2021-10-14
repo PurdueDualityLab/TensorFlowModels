@@ -35,7 +35,8 @@ task:
     norm_activation:
       activation: gelu
       norm_epsilon: 0.0001
-      use_sync_bn: null
+      norm_momentum: 0.97
+      use_sync_bn: true
     detection_generator:
       box_type:
         'all': scaled
