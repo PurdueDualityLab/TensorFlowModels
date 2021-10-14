@@ -36,6 +36,9 @@ class Swin(hyperparams.Config):
   normalize_endpoints: bool = True
   norm_layer: str = 'layer_norm'
   ignore_shifts: bool =  False
+  alt_shifts: bool = False
+  concat: bool = False
+  cat_input: bool = True
 
 @dataclasses.dataclass
 class Backbone(backbones.Backbone):

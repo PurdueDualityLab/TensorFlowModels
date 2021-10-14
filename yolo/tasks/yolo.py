@@ -400,6 +400,8 @@ class YoloTask(base_task.Task):
     if ema:
       logging.info("EMA is enabled.")
     optimizer = opt_factory.add_ema(optimizer)
+    # if ema and self.task_config.model.backbone.get().type == "swin":
+    #   optimizer.shadow_copy(self._model.decoder)
     optimizer = self._wrap_optimizer(optimizer, runtime_config)
     return optimizer
 

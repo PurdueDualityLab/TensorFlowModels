@@ -25,7 +25,8 @@ from functools import partial
 
 USE_SYNC_BN = True
 SHIFT = True
-CAT_INPUT = True
+ALT_SHIFTS = False
+CAT_INPUT = False
 
 def _get_activation_fn(activation, leaky_alpha = 0.1):
   if activation == 'leaky':
@@ -339,7 +340,41 @@ class ShiftedWindowMultiHeadAttention(tf.keras.layers.Layer):
       **self._init_args
     )
 
+    H, W = input_shape[1:-1]
+    self.Hp = int(np.ceil(H / self._window_size[0]) * self._window_size[0])
+    self.Wp = int(np.ceil(W / self._window_size[1]) * self._window_size[1])
+    img_mask = np.zeros((1, self.Hp, self.Wp, 1))
+
+    h_slices = (
+      slice(0, -self._window_size[0]), 
+      slice(-self._window_size[0], -self._shift_size), 
+      slice(-self._shift_size, None)
+    )
+    w_slices = (
+      slice(0, -self._window_size[1]), 
+      slice(-self._window_size[1], -self._shift_size), 
+      slice(-self._shift_size, None)
+    )
+
+    cnt = 0 
+    for h in h_slices: 
+      for w in w_slices:
+        img_mask[:, h, w, :] = cnt 
+        cnt += 1
+
+    img_mask = tf.convert_to_tensor(img_mask)
+    mask_windows = window_partition(img_mask, self._window_size)
+    mask_windows = tf.reshape(mask_windows, [-1, self._window_size[0]*self._window_size[1]])
+
+    attn_mask = tf.expand_dims(mask_windows, axis = 1) - tf.expand_dims(mask_windows, axis = 2)
+    attn_mask = tf.where(attn_mask == 0, tf.cast(0.0, img_mask.dtype), attn_mask)
+    attn_mask = tf.where(attn_mask != 0, tf.cast(-100.0, img_mask.dtype), attn_mask)
+
+    self._attn_mask = attn_mask
     return 
+
+  def _build_mask(self, dtype = 'float32'):
+    return tf.cast(self._attn_mask, dtype)
 
   def call(self, x, mask = None, training = None):
     
@@ -362,42 +397,32 @@ class ShiftedWindowMultiHeadAttention(tf.keras.layers.Layer):
     _, Hp, Wp, _ = x.shape
 
     if self._shift  == True:
-      shifts = [(0, 0), (self._shift_size, self._shift_size)] # 6 ms latency, 9 ms latency 
+      shifts = [(0, 0), (-self._shift_size, -self._shift_size)] # 6 ms latency, 9 ms latency 
     elif self._shift is None:
-      shifts = [(self._shift_size, self._shift_size)]
+      shifts = [(-self._shift_size, -self._shift_size)]
     else:
       shifts = [(0, 0)] # 6 ms latency
 
     x_output = None
-    windows = []
-    bsize = []
     for shift in shifts:
       # cyclic shift 
       if shift[0] != 0 or shift[1] != 0:
-        shifted_x = x[:, (shift[0]):(Hp - (self._window_size[0] - shift[0])), (shift[1]):(Wp - (self._window_size[1] - shift[1])), :]
-        attn_mask = None
+        shifted_x = tf.roll(x, shift=[-shift[0], -shift[1]], axis = [1, 2])
+        attn_mask = self._build_mask(dtype = x.dtype) if mask is None else mask
       else:
         shifted_x = x
         attn_mask = None 
 
       x_windows = window_partition(shifted_x, self._window_size) # nW*B, window_size, window_size, C
-      windows.append(x_windows)
+      x_windows = tf.reshape(x_windows, [-1, self._window_size[0] * self._window_size[1], C]) # nW*B, window_size*window_size, C
 
-      nwin = tf.shape(x_windows)
-      bsize.append(nwin[0])
+      attn_windows = self._attention_layer(x_windows, mask=attn_mask, training=training)
 
-    x_windows = tf.concat(windows, axis = 0)
-    x_windows = tf.reshape(x_windows, [-1, self._window_size[0] * self._window_size[1], C]) # nW*B, window_size*window_size, C
-    attn_windows = self._attention_layer(x_windows, mask=attn_mask, training=training)
-    attn_windows = tf.reshape(attn_windows, [-1, self._window_size[0], self._window_size[1], C]) # nW*B, window_size*window_size, C
-    windows = tf.split(attn_windows, bsize, axis = 0)
+      attn_windows = tf.reshape(attn_windows, [-1, self._window_size[0], self._window_size[1], C]) # nW*B, window_size*window_size, C
+      shifted_x = window_reverse(attn_windows, self._window_size, Hp, Wp) # B H' W' C
 
-    for shift, attn_windows in zip(shifts, windows):
       if shift[0] != 0 or shift[1] != 0:
-        shifted_x = window_reverse(attn_windows, self._window_size, (Hp - self._window_size[0]), (Wp - self._window_size[1])) # B H' W' C
-        shifted_x = tf.pad(shifted_x, [[0,0], [shift[0], self._window_size[0] - shift[0]], [shift[1], self._window_size[1] - shift[1]], [0, 0]]) 
-      else:
-        shifted_x = window_reverse(attn_windows, self._window_size, Hp, Wp) # B H' W' C
+        shifted_x = tf.roll(shifted_x, shift=[shift[0], shift[1]], axis = [1, 2])
 
       if x_output is None:
         x_output = shifted_x
@@ -413,6 +438,7 @@ class ShiftedWindowMultiHeadAttention(tf.keras.layers.Layer):
       x = shortcut + x_output
 
     return x
+
 
 class SPP(tf.keras.layers.Layer):
   """Spatial Pyramid Pooling.
@@ -514,7 +540,6 @@ class LeFFN(tf.keras.layers.Layer):
                activation = "gelu", 
                leaky_alpha=0.1,
                dropout = 0.0, 
-               cat_input = True, 
                **kwargs):
     super().__init__(**kwargs)
 
@@ -522,7 +547,6 @@ class LeFFN(tf.keras.layers.Layer):
     self._strides = strides
     self._hidden_features = hidden_features
     self._out_features = out_features
-    self._cat_input = cat_input
 
     if USE_SYNC_BN:
       self._norm_layer = _get_norm_fn("sync_batch_norm")
@@ -546,7 +570,7 @@ class LeFFN(tf.keras.layers.Layer):
     hidden_features = self._hidden_features or input_shape[-1]
     out_features = self._out_features or input_shape[-1]
 
-    self.dw_spatial_sample = SPP([3], strides = 1, cat_input = self._cat_input, **self._init_args) # per layer spatial binning
+    self.dw_spatial_sample = SPP([3], strides = 1, cat_input = CAT_INPUT, **self._init_args) # per layer spatial binning
     self.norm_spatial_sample = self._norm_layer()
 
     self.fc_expand = nn_blocks.ConvBN(filters = hidden_features,
@@ -603,7 +627,6 @@ class SwinTransformerLayer(tf.keras.layers.Layer):
                kernel_regularizer=None,
                bias_initializer='zeros',
                bias_regularizer=None, 
-               cat_input = True, 
                **kwargs):
     super().__init__(**kwargs)
 
@@ -619,7 +642,6 @@ class SwinTransformerLayer(tf.keras.layers.Layer):
     self._dropout = dropout 
     self._attention_dropout = attention_dropout
     self._drop_path = drop_path
-    self._cat_input = cat_input
 
     self._activation = activation
     if USE_SYNC_BN:
@@ -667,7 +689,7 @@ class SwinTransformerLayer(tf.keras.layers.Layer):
     
     mlp_hidden_dim = int(self._dims * self._mlp_ratio)
     self.mlp = LeFFN(hidden_features=mlp_hidden_dim, activation=self._activation, 
-                   dropout=self._dropout, cat_input=self._cat_input, **self._init_args)
+                   dropout=self._dropout, **self._init_args)
   
   def call(self, x, mask_matrix = None, training = None):
     x = self.attention(x, 
@@ -696,7 +718,6 @@ class PatchMerge(tf.keras.layers.Layer):
   def __init__(self,
                norm_layer = 'layer_norm',
                filter_scale = 2, 
-               spp_keys = [3, 5], 
                kernel_initializer='TruncatedNormal',
                kernel_regularizer=None,
                bias_initializer='zeros',
@@ -711,7 +732,6 @@ class PatchMerge(tf.keras.layers.Layer):
       self._norm_layer = _get_norm_fn("batch_norm")
 
     self._filter_scale = filter_scale
-    self._spp_keys = spp_keys
 
     # init and regularizer
     self._init_args = dict(
@@ -724,7 +744,7 @@ class PatchMerge(tf.keras.layers.Layer):
   def build(self, input_shape):
     self._dims = input_shape[-1]
 
-    self.expand = SPP(self._spp_keys, strides = 2, cat_input = False) #, use_bn=True) # per layer spatial binning
+    self.expand = SPP([3, 5], strides = 2, cat_input = False) #, use_bn=True) # per layer spatial binning
     self.reduce = nn_blocks.ConvBN(filters = self._dims * self._filter_scale, # point wise token expantion
                                         kernel_size = (1, 1), 
                                         strides = (1, 1), 
@@ -765,9 +785,6 @@ class SwinTransformerBlock(tf.keras.layers.Layer):
                bias_initializer='zeros',
                bias_regularizer=None, 
                ignore_shifts = False, 
-               alt_shifts = False, 
-               concat = False,
-               cat_input = True, 
                **kwargs):
     super().__init__(**kwargs)
 
@@ -781,9 +798,6 @@ class SwinTransformerBlock(tf.keras.layers.Layer):
     self._norm_layer = _get_norm_fn(norm_layer)
     self._downsample = downsample
     self._ignore_shifts = ignore_shifts
-    self._alt_shifts = alt_shifts
-    self._concat = concat
-    self._cat_input = cat_input
 
     # init and regularizer
     self._swin_args = dict(
@@ -820,19 +834,12 @@ class SwinTransformerBlock(tf.keras.layers.Layer):
       
       drop_path = self._drop_path[i] if index_drop_path else self._drop_path
 
-      shift = SHIFT if not self._alt_shifts else (None if shift_size != 0 else False)
-
-      if self._concat:
-        num_heads = self._num_heads - 1
-      else:
-        num_heads = self._num_heads
-
-      layer = SwinTransformerLayer(num_heads, 
+      shift = SHIFT if not ALT_SHIFTS else (None if shift_size != 0 else False)
+      layer = SwinTransformerLayer(self._num_heads, 
                                    window_size=window_size,
                                    shift_size=shift_size, 
                                    shift = shift, 
-                                   drop_path=drop_path,
-                                   cat_input=self._cat_input, 
+                                   drop_path=drop_path, 
                                    **self._swin_args)
       self.layers.append(layer)
     
@@ -844,16 +851,8 @@ class SwinTransformerBlock(tf.keras.layers.Layer):
 
   def call(self, x):
     
-    if self._concat:
-      _, _, _, C = x.shape
-      dims = C // self._num_heads
-      shortcut, x = tf.split(x, [1 * dims, (self._num_heads - 1) * dims], axis = -1)
-
     for layer in self.layers:
       x = layer(x) 
-
-    if self._concat:
-      x = tf.concat([x, shortcut], axis = -1)
 
     x_down = x
     if self.downsample is not None:
@@ -911,9 +910,7 @@ class PatchEmbed(tf.keras.layers.Layer):
     )
     
     if self._patch_size == 4:
-      #self.sample = tf.keras.layers.MaxPool2D(pool_size=(3, 3), strides=(2,2), padding = "same")
-      self.sample = SPP([3], strides = 2, cat_input = False, use_bn=True, unweighted=False)
-      # self.sample = PatchMerge(filter_scale=1, spp_keys=[1, 3])
+      self.sample = tf.keras.layers.MaxPool2D(pool_size=(3, 3), strides=(2,2), padding = "same")
     
 
     if self._absolute_positional_embed:

@@ -14,6 +14,7 @@
 
 # Lint as: python3
 """Contains definitions of Swin Backbone Networks."""
+from operator import concat
 from typing import List
 import tensorflow as tf
 import math
@@ -51,6 +52,9 @@ class SwinTransformer(tf.keras.Model):
                kernel_regularizer=None,
                bias_initializer='zeros',
                bias_regularizer=None, 
+               alt_shifts = False, 
+               concat = False, 
+               cat_input = True, 
                **kwargs):
 
     if kernel_initializer == 'TruncatedNormal':
@@ -65,6 +69,9 @@ class SwinTransformer(tf.keras.Model):
     self._depths = depths
     self._num_layers = len(depths)
     self._num_heads = num_heads
+    self._alt_shifts = alt_shifts
+    self._concat = concat
+    self._cat_input = cat_input
 
     if not isinstance(window_size, list):
       self._window_size = [window_size] * self._num_layers
@@ -149,6 +156,9 @@ class SwinTransformer(tf.keras.Model):
           norm_layer=self._norm_layer_key, 
           downsample='patch_and_merge' if (i < self._num_layers - 1) else None, 
           activation=self._activation, 
+          alt_shifts=self._alt_shifts,
+          concat=self._concat,
+          cat_input=self._cat_input,
           **self._init_args)(x)
       outputs[str(level)] = x_output
       level += 1
@@ -233,6 +243,9 @@ def build_swin(
       absolute_positional_embed=backbone_config.absolute_positional_embed,
       activation=norm_activation_config.activation,
       kernel_regularizer=l2_regularizer, 
+      alt_shifts = backbone_config.alt_shifts, 
+      concat = backbone_config.concat, 
+      cat_input = backbone_config.cat_input,
       ignore_shifts = backbone_config.ignore_shifts)
   model.summary()
   return model
