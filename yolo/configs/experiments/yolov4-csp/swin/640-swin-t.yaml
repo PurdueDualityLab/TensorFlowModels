@@ -23,7 +23,7 @@ task:
         mlp_ratio: [2, 2, 2, 2]
         alt_shifts: False
         cat_input: True
-        concat: False
+        concat: True
     decoder:
       type: yolo_decoder
       yolo_decoder:
