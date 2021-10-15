@@ -19,7 +19,7 @@ task:
         embed_dims: 128
         num_heads: [4, 8, 16, 32]
         # embed_dims: 64
-        # num_heads: [2, 4, 8, 16]
+        num_heads: [2, 4, 8, 16]
         # window_size: [8, 8, 8, 8]
         depths: [1, 1, 2, 1]
         drop_path: 0.0
