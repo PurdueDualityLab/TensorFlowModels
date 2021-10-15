@@ -199,7 +199,7 @@ class WindowedMultiHeadAttention(tf.keras.layers.Layer):
       self.proj_drop = tf.keras.layers.Dropout(self._projection_dropout)
     return 
   
-  @tf.function
+  # @tf.function
   def get_indexed_bias(self):
     # compute the relative poisiton bias
     num_elems = self._window_size[0] * self._window_size[1]
@@ -919,9 +919,8 @@ class PatchEmbed(tf.keras.layers.Layer):
     )
     
     if self._patch_size == 4:
-      self.sample = tf.keras.layers.MaxPool2D(pool_size=(3, 3), strides=(2,2), padding = "same")
-      # self.sample = SPP([3], strides = 2, cat_input = False, use_bn=True, unweighted=False)
-      # self.sample = PatchMerge(filter_scale=1, spp_keys=[1, 3])
+      # self.sample = tf.keras.layers.MaxPool2D(pool_size=(3, 3), strides=(2,2), padding = "same")
+      self.sample = SPP([3], strides = 2, cat_input = False, use_bn=True, unweighted=False)
     
 
     if self._absolute_positional_embed:

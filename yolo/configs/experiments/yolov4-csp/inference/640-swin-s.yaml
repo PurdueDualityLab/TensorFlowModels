@@ -6,29 +6,30 @@ task:
   smart_bias_lr: 0.0
   model:
     darknet_based_model: False
-    input_size: [416, 416, 3]
+    input_size: [640, 640, 3]
+    # input_size: [512, 512, 3]
     backbone:
       type: 'swin'
       swin:
         min_level: 3
         max_level: 5
         patch_size: 4
-        embed_dims: 64
+        embed_dims: 128
         num_heads: [2, 4, 8, 16]
         window_size: [8, 8, 8, 8]
-        depths: [1, 1, 1, 1]
+        depths: [1, 1, 2, 1]
         drop_path: 0.0
         absolute_positional_embed: False
         normalize_endpoints: True
-        mlp_ratio: [2, 2, 2, 2]
-        cat_input: True
+        mlp_ratio: [2, 2, 3, 4]
         alt_shifts: False
-        concat: False
+        cat_input: True
+        concat: True
     decoder:
       type: yolo_decoder
       yolo_decoder:
         version: v4
-        type: tiny
+        type: csp
     head:
       smart_bias: true
     norm_activation:
@@ -96,11 +97,7 @@ trainer:
   summary_interval: 9250
   checkpoint_interval: 1850
   optimizer_config:
-    # ema: null
-    ema:
-      average_decay: 0.9999
-      trainable_weights_only: False
-      dynamic_decay: True
+    ema: null
     optimizer:
       type: 'adamw'
       adamw:
