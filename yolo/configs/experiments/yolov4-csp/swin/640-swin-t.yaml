@@ -13,8 +13,8 @@ task:
         min_level: 3
         max_level: 5
         patch_size: 4
-        embed_dims: 64
-        num_heads: [2, 4, 8, 16]
+        embed_dims: 96
+        num_heads: [3, 6, 12, 24]
         window_size: [8, 8, 8, 8]
         depths: [1, 1, 1, 1]
         drop_path: 0.0

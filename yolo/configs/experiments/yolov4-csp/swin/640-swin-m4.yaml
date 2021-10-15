@@ -17,7 +17,7 @@ task:
         num_heads: [2, 4, 8, 16]
         window_size: [8, 8, 8, 8]
         depths: [1, 2, 2, 2]
-        drop_path: 0.0
+        drop_path: 0.1
         absolute_positional_embed: False
         normalize_endpoints: True
         mlp_ratio: [2, 2, 2, 2]
