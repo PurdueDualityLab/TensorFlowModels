@@ -189,6 +189,7 @@ class WindowedMultiHeadAttention(tf.keras.layers.Layer):
 
     self.qkv = tf.keras.layers.Dense(
         self.dim * 3, use_bias = self._qkv_bias, **self._init_args)
+
     self.attn_drop = tf.keras.layers.Dropout(self._attention_dropout)
     self.act = _get_activation_fn(self._attention_activation) # softmax
 
@@ -198,6 +199,7 @@ class WindowedMultiHeadAttention(tf.keras.layers.Layer):
       self.proj_drop = tf.keras.layers.Dropout(self._projection_dropout)
     return 
   
+  @tf.function
   def get_indexed_bias(self):
     # compute the relative poisiton bias
     num_elems = self._window_size[0] * self._window_size[1]
@@ -207,14 +209,18 @@ class WindowedMultiHeadAttention(tf.keras.layers.Layer):
     relative_position_bias = tf.transpose(relative_position_bias, perm=(2, 0, 1)) # nH, Wh*Ww, Wh*Ww
     return tf.expand_dims(relative_position_bias, axis = 0)
 
-  def call(self, x, mask = None, training = None):
-    _, N, C = x.shape
-
+  def get_embedding(self, x, N, C):
     qkv = self.qkv(x)
     qkv = tf.reshape(qkv, [-1, N, 3, self._num_heads, C // self._num_heads])
-    qkv = tf.transpose(qkv, perm=(2, 0, 3, 1, 4))
-    q, k, v = qkv[0], qkv[1], qkv[2]
+    #qkv = tf.transpose(qkv, perm=(2, 0, 3, 1, 4))
+    qkv = tf.einsum("bnthc->tbhnc", qkv)
+    return qkv[0], qkv[1], qkv[2]
+
+  def call(self, x, mask = None, training = None):
+    _, N, C = x.shape
     
+    q, k, v = self.get_embedding(x, N, C)
+
     # compute the matrix mul attention
     q = q * self.scale
     attn = tf.matmul(q, k, transpose_b = True)
@@ -234,8 +240,11 @@ class WindowedMultiHeadAttention(tf.keras.layers.Layer):
     if training:
       attn = self.attn_drop(attn)
 
-    x = tf.matmul(attn, v)
-    x = tf.transpose(x, perm = (0, 2, 1, 3)) # move heads to be merged with features
+    # x = tf.matmul(attn, v)
+    # x = tf.transpose(x, perm = (0, 2, 1, 3)) # move heads to be merged with features
+    # x = tf.einsum("bijc->bjic", x)
+
+    x = tf.einsum("bhij,bhjk->bihk", attn, v)
     x = tf.reshape(x, [-1, N, C])
 
     if self._project_attention:
@@ -910,8 +919,8 @@ class PatchEmbed(tf.keras.layers.Layer):
     )
     
     if self._patch_size == 4:
-      # self.sample = tf.keras.layers.MaxPool2D(pool_size=(3, 3), strides=(2,2), padding = "same")
-      self.sample = SPP([3], strides = 2, cat_input = False, use_bn=True, unweighted=False)
+      self.sample = tf.keras.layers.MaxPool2D(pool_size=(3, 3), strides=(2,2), padding = "same")
+      # self.sample = SPP([3], strides = 2, cat_input = False, use_bn=True, unweighted=False)
       # self.sample = PatchMerge(filter_scale=1, spp_keys=[1, 3])
     
 
