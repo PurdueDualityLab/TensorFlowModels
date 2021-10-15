@@ -696,6 +696,61 @@ class SwinTransformerLayer(tf.keras.layers.Layer):
     x = x + x_interem
     return x
 
+class PatchUnmerge(tf.keras.layers.Layer):
+
+  # reprojection and re-embedding
+
+  def __init__(self,
+               norm_layer = 'layer_norm',
+               filter_scale = 2, 
+               spp_keys = [3, 5], 
+               kernel_initializer='TruncatedNormal',
+               kernel_regularizer=None,
+               bias_initializer='zeros',
+               bias_regularizer=None, 
+               **kwargs):
+    super().__init__(**kwargs)
+
+    #default
+    if USE_SYNC_BN:
+      self._norm_layer = _get_norm_fn("sync_batch_norm")
+    else:
+      self._norm_layer = _get_norm_fn("batch_norm")
+
+    self._filter_scale = filter_scale
+    self._spp_keys = spp_keys
+
+    # init and regularizer
+    self._init_args = dict(
+      kernel_initializer = _get_initializer(kernel_initializer),
+      bias_initializer = bias_initializer,
+      kernel_regularizer = kernel_regularizer,
+      bias_regularizer = bias_regularizer,
+    )
+  
+  def build(self, input_shape):
+    self._dims = input_shape[-1]
+
+    self.expand = SPP(self._spp_keys, strides = 2, cat_input = False) #, use_bn=True) # per layer spatial binning
+    self.reduce = nn_blocks.ConvBN(filters = int(self._dims * self._filter_scale), # point wise token expantion
+                                        kernel_size = (1, 1), 
+                                        strides = (1, 1), 
+                                        padding = "same", 
+                                        activation = None, 
+                                        use_bias = True,  
+                                        use_bn = False, 
+                                        use_separable_conv = True, 
+                                        use_sync_bn = USE_SYNC_BN,
+                                        **self._init_args)
+    self.norm_reduce = self._norm_layer()
+    
+  
+  def call(self, x):
+    """Down sample by 2. """
+    x = self.expand(x)
+    x = self.reduce(x)
+    x = self.norm_reduce(x)
+    return x
 
 class PatchMerge(tf.keras.layers.Layer):
 

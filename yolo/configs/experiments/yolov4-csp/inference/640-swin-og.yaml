@@ -22,7 +22,7 @@ task:
         normalize_endpoints: True
         mlp_ratio: [4, 4, 4, 4]
         alt_shifts: True
-        cat_input: True
+        cat_input: False
         concat: False
     decoder:
       type: yolo_decoder

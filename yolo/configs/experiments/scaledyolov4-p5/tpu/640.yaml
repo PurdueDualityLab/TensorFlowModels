@@ -16,8 +16,10 @@ task:
         width_scale: 1.00
         depth_scale: 1.00
     decoder:
-      version: v4
-      type: csp_large
+      type: yolo_decoder
+      yolo_decoder:
+        version: v4
+        type: csp_large
     head:
       smart_bias: true
     detection_generator:

@@ -51,7 +51,7 @@ task:
       box_loss_type:  
         'all': ciou
       ignore_thresh:
-        'all': 0.7
+        'all': 0.0
       iou_normalizer: 
         'all': 0.05
       cls_normalizer: 
