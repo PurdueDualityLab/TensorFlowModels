@@ -17,11 +17,11 @@ task:
         embed_dims: 128
         num_heads: [4, 4, 8, 16]
         window_size: [8, 16, 16, 16]
-        depths: [1, 2, 2, 2]
+        depths: [1, 1, 2, 2]
         drop_path: 0.0
         absolute_positional_embed: False
         normalize_endpoints: True
-        mlp_ratio: [1.5, 1.75, 2, 3]
+        mlp_ratio: [1.5, 1.75, 2, 2.5]
         alt_shifts: False
         cat_input: True
         concat: True
