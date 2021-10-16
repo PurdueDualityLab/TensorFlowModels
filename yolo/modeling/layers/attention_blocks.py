@@ -240,9 +240,7 @@ class WindowedMultiHeadAttention(tf.keras.layers.Layer):
     if training:
       attn = self.attn_drop(attn)
 
-    # x = tf.matmul(attn, v)
-    # x = tf.transpose(x, perm = (0, 2, 1, 3)) # move heads to be merged with features
-    # x = tf.einsum("bijc->bjic", x)
+    # tf.print(attn.shape, self._num_heads)
 
     x = tf.einsum("bhij,bhjk->bihk", attn, v)
     x = tf.reshape(x, [-1, N, C])
@@ -880,16 +878,16 @@ class SwinTransformerBlock(tf.keras.layers.Layer):
       num_heads = self._num_heads
 
     for i in range(self._depth):
-      if self._ignore_shifts:
-        shift_size = 0
-        window_size = self._window_size
-      else:  
-        shift_size = 0 if i % 2 == 0 else self._window_size // 2
-        window_size = self._window_size
+
+      shift_size = 0 if i % 2 == 0 else self._window_size // 2
+      window_size = self._window_size
       
       drop_path = self._drop_path[i] if index_drop_path else self._drop_path
 
-      shift = SHIFT if not self._alt_shifts else (None if shift_size != 0 else False)
+      if self._ignore_shifts:
+        shift = False
+      else:
+        shift = True if not self._alt_shifts else (None if shift_size != 0 else False)
 
       layer = SwinTransformerLayer(num_heads, 
                                    window_size=window_size,

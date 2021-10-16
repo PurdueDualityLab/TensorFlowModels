@@ -16,14 +16,15 @@ task:
         embed_dims: 128
         num_heads: [4, 8, 16, 32]
         window_size: [8, 8, 8, 8]
-        depths: [1, 1, 2, 1]
-        drop_path: 0.1
+        depths: [1, 1, 3, 1]
+        drop_path: 0.0
         absolute_positional_embed: False
         normalize_endpoints: True
-        mlp_ratio: [2, 2, 3, 4]
+        mlp_ratio: [2, 2, 2, 2]
         alt_shifts: False
         cat_input: True
-        concat: False
+        concat: True
+        ignore_shifts: True
     decoder:
       type: yolo_decoder
       yolo_decoder:
