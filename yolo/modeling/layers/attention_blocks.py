@@ -218,7 +218,7 @@ class WindowedMultiHeadAttention(tf.keras.layers.Layer):
 
   def call(self, x, mask = None, training = None):
     _, N, C = x.shape
-    
+
     q, k, v = self.get_embedding(x, N, C)
 
     # compute the matrix mul attention
@@ -239,8 +239,6 @@ class WindowedMultiHeadAttention(tf.keras.layers.Layer):
 
     if training:
       attn = self.attn_drop(attn)
-
-    # tf.print(attn.shape, self._num_heads)
 
     x = tf.einsum("bhij,bhjk->bihk", attn, v)
     x = tf.reshape(x, [-1, N, C])
