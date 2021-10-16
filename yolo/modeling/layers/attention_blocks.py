@@ -15,6 +15,7 @@
 # Lint as: python3
 """Contains common building blocks for yolo neural networks."""
 import logging
+from official.vision.beta.ops import spatial_transform_ops
 from typing import List, Tuple
 from yolo.modeling.layers import nn_blocks
 import tensorflow as tf
@@ -433,6 +434,7 @@ class SPP(tf.keras.layers.Layer):
                kernel_regularizer=None,
                bias_initializer='zeros',
                bias_regularizer=None, 
+               depth_multiplier = 1.0, 
                use_bn = False, 
                **kwargs):
     self._sizes = list(reversed(sizes))
@@ -441,6 +443,7 @@ class SPP(tf.keras.layers.Layer):
     self._strides = strides
     self._cat_input = cat_input
     self._unweighted = unweighted
+    self._depth_multiplier = depth_multiplier
     self._use_bn = use_bn
 
     if use_bn:
@@ -457,22 +460,31 @@ class SPP(tf.keras.layers.Layer):
     )
     super().__init__(**kwargs)
 
-  def _weighted(self, size):
-    if self._use_bn:
-      return  tf.keras.Sequential([tf.keras.layers.DepthwiseConv2D(
+  def _weighted(self, size, input_shape):
+    layers = []
+    if self._depth_multiplier != 1:
+      conv = nn_blocks.ConvBN(
+          filters = int(input_shape[-1] * self._depth_multiplier),
+          kernel_size = (1, 1), 
+          strides = (1, 1), 
+          padding = "same", 
+          activation = None,
+          use_bias = False, 
+          use_bn = False, 
+          **self._init_args
+        )
+      layers.append(conv)      
+    if size != 1:
+      dw = tf.keras.layers.DepthwiseConv2D(
                                         (size, size), # spatial embedding combination and reduction
                                         strides = self._strides, 
                                         padding = "same", 
                                         use_bias = False, 
-                                        **self._init_args), 
-                                    self._norm_layer()])
-    else:
-      return  tf.keras.Sequential([tf.keras.layers.DepthwiseConv2D(
-                                              (size, size), # spatial embedding combination and reduction
-                                              strides = self._strides, 
-                                              padding = "same", 
-                                              use_bias = False, 
-                                              **self._init_args)])
+                                        **self._init_args)
+      layers.append(dw)
+    if self._use_bn:
+      layers.append(self._norm_layer())
+    return tf.keras.Sequential(layers)
 
   def _pooling(self, size):
     return tf.keras.layers.MaxPool2D(
@@ -487,7 +499,7 @@ class SPP(tf.keras.layers.Layer):
       if self._unweighted:
         maxpools.append(self._pooling(size))
       else:
-        maxpools.append(self._weighted(size))
+        maxpools.append(self._weighted(size, input_shape))
     self._maxpools = maxpools
     super().build(input_shape)
 
@@ -550,7 +562,9 @@ class LeFFN(tf.keras.layers.Layer):
     hidden_features = self._hidden_features or input_shape[-1]
     out_features = self._out_features or input_shape[-1]
 
-    self.dw_spatial_sample = SPP([3], strides = 1, cat_input = self._cat_input, **self._init_args) # per layer spatial binning
+    # self.dw_spatial_sample = SPP([4, 3], strides = 1, depth_multiplier = 0.5, cat_input = self._cat_input, **self._init_args) # per layer spatial binning
+    self.dw_spatial_sample = SPP([3], strides = 1, depth_multiplier = 1, cat_input = self._cat_input, **self._init_args) # per layer spatial binning
+    # self.dw_spatial_sample = SPP([3], strides = 1, depth_multiplier = 1, cat_input = False, **self._init_args) # per layer spatial binning
     self.norm_spatial_sample = self._norm_layer()
 
     self.fc_expand = nn_blocks.ConvBN(filters = hidden_features,
@@ -574,8 +588,8 @@ class LeFFN(tf.keras.layers.Layer):
     self.act = _get_activation_fn(self._activation, leaky_alpha=self._leaky)
     return 
 
-  def call(self, x):
-    x = self.dw_spatial_sample(x)
+  def call(self, x_in):
+    x = self.dw_spatial_sample(x_in)
     x = self.norm_spatial_sample(x)
     x = self.act(x)
 
@@ -585,7 +599,6 @@ class LeFFN(tf.keras.layers.Layer):
     x = self.fc_compress(x)
     x = self.act(x)
     return x
-
 
 class SwinTransformerLayer(tf.keras.layers.Layer):
 
@@ -699,7 +712,7 @@ class PatchUnmerge(tf.keras.layers.Layer):
   def __init__(self,
                norm_layer = 'layer_norm',
                filter_scale = 2, 
-               spp_keys = [3, 5], 
+               spp_keys = [3], 
                kernel_initializer='TruncatedNormal',
                kernel_regularizer=None,
                bias_initializer='zeros',
@@ -725,27 +738,45 @@ class PatchUnmerge(tf.keras.layers.Layer):
     )
   
   def build(self, input_shape):
-    self._dims = input_shape[-1]
+    self._dims = input_shape[0][-1]
 
-    self.expand = SPP(self._spp_keys, strides = 2, cat_input = False) #, use_bn=True) # per layer spatial binning
-    self.reduce = nn_blocks.ConvBN(filters = int(self._dims * self._filter_scale), # point wise token expantion
-                                        kernel_size = (1, 1), 
+    self.expand = partial(spatial_transform_ops.nearest_upsampling, scale = 2)
+    self.reduce1 = nn_blocks.ConvBN(filters = int(input_shape[1][-1]), # point wise token expantion
+                                        kernel_size = (3, 3), 
                                         strides = (1, 1), 
                                         padding = "same", 
                                         activation = None, 
                                         use_bias = True,  
-                                        use_bn = False, 
+                                        use_bn = True, 
                                         use_separable_conv = True, 
                                         use_sync_bn = USE_SYNC_BN,
                                         **self._init_args)
-    self.norm_reduce = self._norm_layer()
-    
+    # self.reduce2 = nn_blocks.ConvBN(filters = int(input_shape[1][-1]), # point wise token expantion
+    #                                     kernel_size = (1, 1), 
+    #                                     strides = (1, 1), 
+    #                                     padding = "same", 
+    #                                     activation = None, 
+    #                                     use_bias = True,  
+    #                                     use_bn = True, 
+    #                                     use_separable_conv = True, 
+    #                                     use_sync_bn = USE_SYNC_BN,
+    #                                     **self._init_args)
+
+
+    self.cat_reduce = SPP(self._spp_keys, strides = 1, cat_input = True)
+    # self.norm_reduce = self._norm_layer()
   
-  def call(self, x):
+  def call(self, inputs):
     """Down sample by 2. """
-    x = self.expand(x)
-    x = self.reduce(x)
-    x = self.norm_reduce(x)
+    x, y = inputs
+    
+    x = tf.cast(self.expand(x), x.dtype)
+    x = self.reduce1(x)
+
+    y = self.cat_reduce(y)
+    y = self.reduce2(y)
+    x = x + y 
+    
     return x
 
 class PatchMerge(tf.keras.layers.Layer):
@@ -841,8 +872,10 @@ class SwinTransformerBlock(tf.keras.layers.Layer):
     self._downsample = downsample
     self._ignore_shifts = ignore_shifts
     self._alt_shifts = alt_shifts
-    self._concat = concat
-    self._cat_input = cat_input
+
+    self._cat_offset = 1
+    self._concat = concat if num_heads - self._cat_offset != 1 else False
+    self._cat_input = cat_input #if num_heads - self._cat_offset != 1 else False
 
     # init and regularizer
     self._swin_args = dict(
@@ -869,7 +902,7 @@ class SwinTransformerBlock(tf.keras.layers.Layer):
     self.layers = []
 
     index_drop_path = isinstance(self._drop_path, List)
-    self._cat_offset = 1
+    
     if self._concat:
       num_heads = self._num_heads - self._cat_offset
     else:
@@ -882,7 +915,9 @@ class SwinTransformerBlock(tf.keras.layers.Layer):
       
       drop_path = self._drop_path[i] if index_drop_path else self._drop_path
 
-      if self._ignore_shifts:
+      if self._ignore_shifts is None:
+        shift = None
+      elif self._ignore_shifts:
         shift = False
       else:
         shift = True if not self._alt_shifts else (None if shift_size != 0 else False)

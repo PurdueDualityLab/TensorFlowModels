@@ -28,7 +28,7 @@ task:
         alt_shifts: False
         cat_input: True
         concat: True
-        ignore_shifts: True
+        ignore_shifts: [True, True, True, True]
     decoder:
       type: yolo_decoder
       yolo_decoder:

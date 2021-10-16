@@ -1,7 +1,7 @@
 """Backbones configurations."""
 # Import libraries
 import dataclasses
-from typing import Optional, List
+from typing import Optional, List, Union
 from official.modeling import hyperparams
 from official.vision.beta.configs import backbones
 
@@ -35,7 +35,7 @@ class Swin(hyperparams.Config):
   absolute_positional_embed: bool = False
   normalize_endpoints: bool = True
   norm_layer: str = 'layer_norm'
-  ignore_shifts: bool =  False
+  ignore_shifts: Union[List[bool], bool] =  False
   alt_shifts: bool = False
   concat: bool = False
   cat_input: bool = True

@@ -14,18 +14,22 @@ task:
         min_level: 3
         max_level: 5
         patch_size: 4
-        embed_dims: 128
-        num_heads: [2, 4, 8, 16]
-        window_size: [8, 8, 8, 8]
-        depths: [1, 2, 3, 1]
-        drop_path: 0.0
+        embed_dims: 96
+        num_heads: [3, 6, 12, 24]
+        # window_size: [8, 8, 8, 8]
+        window_size: [7, 7, 7, 7]
+        depths: [1, 2, 4, 2]
+        # depths: [1, 4, 4, 2]
+        # depths: [2, 8, 8, 4]
+        drop_path: 0.1
         absolute_positional_embed: False
         normalize_endpoints: True
-        mlp_ratio: [1.75, 1.9, 3, 3]
+        mlp_ratio: [2, 2, 2, 2]
         alt_shifts: False
         cat_input: True
         concat: True
-        ignore_shifts: [False, False, True, True]
+        ignore_shifts: [True, True, False, False]
+        # ignore_shifts: [True, True, True, True]
     decoder:
       type: yolo_decoder
       yolo_decoder:

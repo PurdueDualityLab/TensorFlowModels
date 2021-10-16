@@ -141,9 +141,14 @@ class SwinTransformer(tf.keras.Model):
         mlp_ratio = self._mlp_ratio[i]
       else:
         mlp_ratio = self._mlp_ratio
+
+      if isinstance(self._ignore_shifts, list):
+        ignore_shifts = self._ignore_shifts[i]
+      else:
+        ignore_shifts = self._ignore_shifts
       
       x_output, x = attention_blocks.SwinTransformerBlock(
-          ignore_shifts=self._ignore_shifts, 
+          ignore_shifts=ignore_shifts, 
           depth=self._depths[i], 
           num_heads=self._num_heads[i], 
           window_size=self._window_size[i], 

@@ -21,7 +21,7 @@ task:
         absolute_positional_embed: False
         normalize_endpoints: False
         mlp_ratio: [2, 2]
-        cat_input: True
+        cat_input: False
         alt_shifts: False
         concat: True
     norm_activation:
