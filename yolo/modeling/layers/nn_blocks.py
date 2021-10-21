@@ -46,6 +46,7 @@ class ConvBN(tf.keras.layers.Layer):
 
   def __init__(self,
                filters=1,
+               groups=1, 
                kernel_size=(1, 1),
                strides=(1, 1),
                padding='same',
@@ -103,6 +104,7 @@ class ConvBN(tf.keras.layers.Layer):
     self._strides = strides
     self._padding = padding
     self._dilation_rate = dilation_rate
+    self._groups = groups
 
     if kernel_initializer == 'VarianceScaling':
       # to match pytorch initialization method
@@ -177,6 +179,7 @@ class ConvBN(tf.keras.layers.Layer):
     if not self._use_depthwise_conv:
       kwargs.update(
         dict(
+          groups=self._groups,
           filters=self._filters,
         )
       )

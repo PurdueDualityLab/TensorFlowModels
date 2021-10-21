@@ -6,8 +6,9 @@ task:
   smart_bias_lr: 0.0
   model:
     darknet_based_model: False
-    input_size: [640, 640, 3]
-    # input_size: [512, 512, 3]
+    # input_size: [640, 640, 3]
+    input_size: [512, 512, 3]
+    # input_size: [416, 416, 3]
     backbone:
       type: 'swin'
       swin:
@@ -94,6 +95,9 @@ task:
   validation_data:
     global_batch_size: 8
     input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
+    # tfds_name: coco
+    # tfds_data_dir: '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow/'
+    # tfds_split: validation
 trainer:
   train_steps: 351563  # epochs: 120
   validation_steps: 625  # size of validation data

@@ -250,6 +250,174 @@ class WindowedMultiHeadAttention(tf.keras.layers.Layer):
         x = self.proj_drop(x)
     return x
 
+# class WindowedMultiHeadAttention(tf.keras.layers.Layer):
+
+#   """Windowd multi head attention with a location based relative bias that is learned. 
+  
+#   Functionally equivalent to multi head self attention but adds a gather for the 
+#   positional bias. 
+#   """
+
+#   def __init__(self, 
+#                window_size, 
+#                num_heads, 
+#                qkv_bias = True, 
+#                qk_scale = None, 
+#                project_attention = True, 
+#                attention_dropout = 0.0, 
+#                projection_dropout = 0.0, 
+#                kernel_initializer='TruncatedNormal',
+#                kernel_regularizer=None,
+#                bias_initializer='zeros',
+#                bias_regularizer=None, 
+#                relative_bias_initializer='TruncatedNormal', 
+#                attention_activation = 'gelu', # typically jsut soft max, more for future developments of something better 
+#                **kwargs):
+#     super().__init__(**kwargs)
+
+#     if isinstance(window_size, int):
+#       window_size = (window_size, window_size)
+
+#     self._window_size = window_size # wH, wW
+#     self._num_heads = num_heads
+#     self._qkv_bias = qkv_bias
+#     self._qk_scale = qk_scale 
+
+#     self._project_attention = project_attention
+
+#     # dropout
+#     self._attention_dropout = attention_dropout
+#     self._projection_dropout = projection_dropout
+
+#     # activation 
+#     self._attention_activation = attention_activation
+
+#     # init and regularizer
+#     self._relative_bias_initializer = _get_initializer(relative_bias_initializer)
+#     self._relative_bias_regularizer = bias_regularizer
+#     self._init_args = dict(
+#       kernel_initializer = _get_initializer(kernel_initializer),
+#       bias_initializer = bias_initializer,
+#       kernel_regularizer = kernel_regularizer,
+#       bias_regularizer = bias_regularizer,
+#     )
+#     return
+  
+#   def build(self, input_shape):
+#     self.dim = input_shape[-1]
+#     head_dims = self.dim//self._num_heads
+#     self.scale = self._qk_scale or head_dims ** -0.5 # x/sqrt(num_heads) = x/sqrt(d_k)
+
+#     # biases to apply to each "position" learned 
+#     num_elements = (2*self._window_size[0] - 1) * (2*self._window_size[1] - 1)
+#     self._realtive_positional_weight_table = self.add_weight(
+#       name = '{}_realtive_positional_bias_table'.format(self.name), 
+#       shape = [num_elements, self._num_heads], 
+#       initializer = self._relative_bias_initializer, 
+#       regularizer = self._relative_bias_regularizer, 
+#       trainable = True)
+#     self._realtive_positional_bias_table = self.add_weight(
+#       name = '{}_realtive_positional_bias_table'.format(self.name), 
+#       shape = [num_elements, self._num_heads], 
+#       initializer = self._relative_bias_initializer, 
+#       regularizer = self._relative_bias_regularizer, 
+#       trainable = True)
+
+#     # get the postions to associate the above bais table with    
+#     coords_h = np.arange(self._window_size[0])
+#     coords_w = np.arange(self._window_size[1])
+#     coords = np.stack(np.meshgrid(coords_h, coords_w, indexing='ij')) # 2, Wh, Ww
+#     coords_flatten = coords.reshape(2, -1) # 2, Wh*Ww
+#     relative_coords = coords_flatten[:, :, None] - coords_flatten[:, None, :] # 2, Wh*Ww, Wh*Ww
+#     relative_coords = relative_coords.transpose([1, 2, 0]) # Wh*Ww, Wh*Ww, 2
+#     relative_coords[:, :, 0] += self._window_size[0] - 1 # shift to start from 0
+#     relative_coords[:, :, 1] += self._window_size[1] - 1
+#     relative_coords[:, :, 0] *= 2 * self._window_size[1] - 1
+#     relative_positional_indexes = relative_coords.sum(-1) # Wh*Ww, Wh*Ww
+#     self._relative_positional_indexes = tf.Variable(
+#       initial_value=tf.convert_to_tensor(relative_positional_indexes), 
+#       trainable=False, 
+#       name='{}_realtive_indexes'.format(self.name))
+
+#     self.qkv = tf.keras.layers.Dense(
+#         self.dim * 3, use_bias = self._qkv_bias, **self._init_args)
+
+#     self.attn_drop = tf.keras.layers.Dropout(self._attention_dropout)
+#     self.act = _get_activation_fn(self._attention_activation) # softmax
+
+#     # per attention projection
+#     if self._project_attention:
+#       self.proj = tf.keras.layers.Dense(self.dim, **self._init_args)
+#       self.proj_drop = tf.keras.layers.Dropout(self._projection_dropout)
+#     return 
+  
+#   # @tf.function
+#   def get_indexed_bias(self):
+#     # compute the relative poisiton bias
+#     num_elems = self._window_size[0] * self._window_size[1]
+#     indexes = tf.reshape(self._relative_positional_indexes, [-1])
+#     relative_position_bias = tf.gather(self._realtive_positional_bias_table, indexes)
+#     relative_position_bias = tf.reshape(relative_position_bias, [num_elems, num_elems, -1]) # Wh*Ww,Wh*Ww,nH
+#     relative_position_bias = tf.transpose(relative_position_bias, perm=(2, 0, 1)) # nH, Wh*Ww, Wh*Ww
+#     return tf.expand_dims(relative_position_bias, axis = 0)
+
+#   def get_indexed_weights(self):
+#     # compute the relative poisiton bias
+#     num_elems = self._window_size[0] * self._window_size[1]
+#     indexes = tf.reshape(self._relative_positional_indexes, [-1])
+#     relative_position_bias = tf.gather(self._realtive_positional_weight_table, indexes)
+#     relative_position_bias = tf.reshape(relative_position_bias, [num_elems, num_elems, -1]) # Wh*Ww,Wh*Ww,nH
+#     relative_position_bias = tf.transpose(relative_position_bias, perm=(2, 0, 1)) # nH, Wh*Ww, Wh*Ww
+#     return tf.expand_dims(relative_position_bias, axis = 0)
+
+#   def get_embedding(self, x, N, C):
+#     qkv = self.qkv(x)
+#     qkv = tf.reshape(qkv, [-1, N, 3, self._num_heads, C // self._num_heads])
+#     #qkv = tf.transpose(qkv, perm=(2, 0, 3, 1, 4))
+#     qkv = tf.einsum("bnthc->tbhnc", qkv)
+#     return qkv[0], qkv[1], qkv[2]
+
+#   def call(self, x, mask = None, training = None):
+#     _, N, C = x.shape
+
+#     q, k, v = self.get_embedding(x, N, C)
+
+#     # compute the matrix mul attention
+#     q = q * self.scale
+#     attn = tf.matmul(q, k, transpose_b = True)
+
+#     # compute the relative poisiton bias
+#     relative_position_bias = self.get_indexed_bias()
+#     # tf.print(relative_position_bias.shape)
+#     attn = attn + relative_position_bias
+
+#     if mask is not None:
+#       num_windows = mask.shape[0]
+#       mask = tf.cast(tf.expand_dims(tf.expand_dims(mask, axis = 1), axis = 0), attn.dtype)
+#       attn = tf.reshape(attn, [-1, num_windows, self._num_heads, N, N]) + mask
+#       attn = tf.reshape(attn, [-1, self._num_heads, N, N])
+
+    
+#     relative_position_weights = self.get_indexed_weights()
+#     attn = self.act(attn * relative_position_weights)
+#     attn = attn/(tf.reduce_sum(attn, axis = -1, keepdims = True) + 0.00001)
+#     # attn = self.act(attn)
+
+#     # tf.print(attn.shape)
+
+#     if training:
+#       attn = self.attn_drop(attn)
+
+#     x = tf.einsum("bhij,bhjk->bihk", attn, v)
+#     x = tf.reshape(x, [-1, N, C])
+
+#     if self._project_attention:
+#       x = self.proj(x)
+#       if training:
+#         x = self.proj_drop(x)
+#     return x
+
+
 class ShiftedWindowMultiHeadAttention(tf.keras.layers.Layer):
 
   def __init__(self, 

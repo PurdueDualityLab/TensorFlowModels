@@ -30,6 +30,7 @@ from official.vision.beta.dataloaders import tf_example_label_map_decoder
 from yolo import optimization
 from yolo.ops import mosaic
 from yolo.ops import preprocessing_ops
+from yolo.ops import kmeans_anchors
 from yolo.dataloaders import yolo_input
 from yolo.dataloaders import tf_example_decoder
 from yolo.configs import yolo as exp_cfg
@@ -99,6 +100,35 @@ class YoloTask(base_task.Task):
         raise ValueError('Unknown decoder type: {}!'.format(
             params.decoder.type))
     return decoder
+
+  def generate_anchors(self, num_anchors = None, input_context = None):
+    input_size = self.task_config.model.input_size
+    boxes = self.task_config.model.anchor_boxes
+    backbone =  self.task_config.model.backbone.get()
+
+    dataset = self.task_config.validation_data
+    decoder = self._get_data_decoder(dataset)
+
+    if num_anchors is None:
+      num_anchors = backbone.max_level - backbone.min_level + 1
+      num_anchors *= boxes.anchors_per_scale
+
+    dataset.global_batch_size = 1
+    box_reader = kmeans_anchors.BoxGenInputReader(
+        dataset,
+        dataset_fn=tf.data.TFRecordDataset,
+        decoder_fn=decoder.decode)
+
+    boxes = box_reader.read(
+      k = num_anchors, 
+      anchors_per_scale = boxes.anchors_per_scale,
+      anchors = None if boxes.boxes is None else [box.box for box in boxes.boxes],
+      image_resolution = input_size,
+      input_context = input_context
+    )
+    return boxes
+
+
 
   def build_inputs(self, params, input_context=None):
     """Build input dataset."""

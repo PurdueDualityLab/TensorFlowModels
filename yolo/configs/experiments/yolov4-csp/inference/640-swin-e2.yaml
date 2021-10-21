@@ -74,7 +74,10 @@ task:
               box: [142, 110], box: [192, 243], box: [459, 401]]
   train_data:
     global_batch_size: 1
-    input_path:  '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
+    tfds_name: coco
+    tfds_data_dir: '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow/'
+    tfds_split: train
+    # input_path:  '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
     shuffle_buffer_size: 10000
     parser:
       mosaic: 
@@ -90,7 +93,10 @@ task:
       area_thresh: 0.1
   validation_data:
     global_batch_size: 8
-    input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
+    # input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
+    tfds_name: coco
+    tfds_data_dir: '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow/'
+    tfds_split: validation
 trainer:
   train_steps: 351563  # epochs: 120
   validation_steps: 625  # size of validation data

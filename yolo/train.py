@@ -14,13 +14,15 @@
 
 # Lint as: python3
 """TensorFlow Model Garden Vision training driver."""
+from operator import add
 from yolo.utils.run_utils import prep_gpu, expand_gpu
 
 prep_gpu()
 
-from absl import app
+from absl import app, logging
 from absl import flags
 import gin
+import os
 
 # pylint: disable=unused-import
 from official.common import registry_imports
@@ -35,6 +37,13 @@ from official.modeling import performance
 
 FLAGS = flags.FLAGS
 
+def add_flags():
+
+  flags.DEFINE_string(
+    'num_anchors', default=None, help='number of anchors to generate')
+
+  flags.DEFINE_boolean(
+    'generate_anchors', default=False, help='number of anchors to generate')
 
 def subdivison_adjustment(params, expirement):
   if expirement == 'yolo_custom' and params.task.model.detection_generator.nms_type == "greedy":
@@ -42,13 +51,34 @@ def subdivison_adjustment(params, expirement):
     tf.config.set_soft_device_placement(True)
   return params
 
+def anchor_generation_mode(params, model_dir, num_anchors):
+  anchors_file = os.path.join(model_dir, "anchor.txt")
+  logging.info(f"generating anchors: {anchors_file}")
+
+  if params.runtime.mixed_precision_dtype:
+    performance.set_mixed_precision_policy(params.runtime.mixed_precision_dtype)
+  distribution_strategy = distribute_utils.get_distribution_strategy(
+      distribution_strategy=params.runtime.distribution_strategy,
+      all_reduce_alg=params.runtime.all_reduce_alg,
+      num_gpus=params.runtime.num_gpus,
+      tpu_address=params.runtime.tpu)
+  with distribution_strategy.scope():
+    task = task_factory.get_task(params.task, logging_dir=model_dir)
+  
+  task.generate_anchors(num_anchors = num_anchors)
+  return
+
 def main(_):
   gin.parse_config_files_and_bindings(FLAGS.gin_file, FLAGS.gin_params)
   params = train_utils.parse_configuration(FLAGS)
   params = subdivison_adjustment(params, FLAGS.experiment)
 
   model_dir = FLAGS.model_dir
-  if 'train' in FLAGS.mode:
+  print(FLAGS.generate_anchors)
+  if FLAGS.generate_anchors:
+    anchor_generation_mode(params, model_dir, FLAGS.num_anchors)
+    return 
+  elif 'train' in FLAGS.mode:
     # Pure eval modes do not output yaml files. Otherwise continuous eval job
     # may race against the train job for writing the same file.
     train_utils.serialize_config(params, model_dir)
@@ -79,5 +109,8 @@ def main(_):
 
 if __name__ == '__main__':
   tfm_flags.define_flags()
+  add_flags()
+
   flags.mark_flags_as_required(['experiment', 'mode', 'model_dir'])
+
   app.run(main)
