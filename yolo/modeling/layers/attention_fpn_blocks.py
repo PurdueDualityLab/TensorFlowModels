@@ -357,6 +357,193 @@ class WindowedAttention(tf.keras.layers.Layer):
       x = self.projection(x)
     return x, attn
 
+class ShiftedWindowAttention(tf.keras.layers.Layer):
+
+
+  def __init__(self, 
+               query_window_size, 
+               source_window_size,
+               num_heads, 
+               shift = False, 
+               kernel_size = 1,
+               post_kernel_size = None,
+               groups = 1, 
+               strides = 1, 
+               use_separable_conv = True, 
+               dilation_rate = 1, 
+               qkv_bias = True, 
+               qk_scale = None, 
+               drop_path = 0.0, 
+               attention_dropout = 0.0, 
+               attention_activation = 'softmax', # typically jsut soft max, more for future developments of something better 
+               relative_bias_initializer='TruncatedNormal', 
+               kernel_initializer='TruncatedNormal',
+               kernel_regularizer=None,
+               bias_initializer='zeros',
+               bias_regularizer=None, 
+               project_attention = True, 
+               projection_dropout = 0.0, 
+               **kwargs):
+
+    super().__init__(**kwargs)
+    self._kernel_size = kernel_size
+    self._post_kernel_size = post_kernel_size or kernel_size
+    self._groups = groups
+    self._strides = strides
+    self._use_separable_conv = use_separable_conv
+    self._dilation_rate = dilation_rate
+
+    if isinstance(query_window_size, int):
+      query_window_size = (query_window_size, query_window_size)
+    self._query_window_size = query_window_size
+
+    if isinstance(source_window_size, int):
+      source_window_size = (source_window_size, source_window_size)
+    self._source_window_size = source_window_size
+
+    self._query_shift_size = (query_window_size[0]//2, query_window_size[1]//2)
+    self._source_shift_size = (source_window_size[0]//2, source_window_size[1]//2)
+
+    self._num_heads = num_heads
+    self._qkv_bias = qkv_bias
+    self._qk_scale = qk_scale 
+    self._shift = shift
+
+    self._project_attention = project_attention
+
+    # dropout
+    self._attention_dropout = attention_dropout
+    self._projection_dropout = projection_dropout
+    self._drop_path = drop_path
+
+    # activation 
+    self._attention_activation = attention_activation
+
+    # init and regularizer
+    self._init_args = dict(
+      kernel_initializer = _get_initializer(kernel_initializer),
+      bias_initializer = bias_initializer,
+      kernel_regularizer = kernel_regularizer,
+      bias_regularizer = bias_regularizer,
+      relative_bias_initializer = _get_initializer(relative_bias_initializer)
+    )
+
+    return 
+
+
+  def build(self, input_shape):
+    self.attention = WindowedAttention(
+      self._num_heads,
+      kernel_size=self._kernel_size,
+      post_kernel_size=self._post_kernel_size,
+      groups=self._groups, 
+      strides=self._strides, 
+      use_separable_conv=self._use_separable_conv, 
+      dilation_rate=self._dilation_rate, 
+      qkv_bias=self._qkv_bias, 
+      qk_scale=self._qk_scale, 
+      attention_dropout=self._attention_dropout, 
+      attention_activation=self._attention_activation, 
+      project_attention = self._project_attention, 
+      projection_dropout = self._projection_dropout,
+      **self._init_args 
+    )
+
+    if self._drop_path > 0.0:
+      self.drop_path = nn_layers.StochasticDepth(self._drop_path)
+    else:
+      self.drop_path = Identity()
+    return
+
+  def pad(self, x, window_size):
+    _, H, W, C = x.shape
+    pad_l = pad_t = 0 
+    pad_r = (window_size[1] - W % window_size[1]) % window_size[1]
+    pad_b = (window_size[0] - H % window_size[0]) % window_size[0]  
+    x = tf.pad(x, [[0,0], [pad_t, pad_b], [pad_l, pad_r], [0, 0]]) 
+    _, Hp, Wp, _ = x.shape
+    return x, H, W, C, Hp, Wp
+
+  def pad_and_shift_input(self, x, window_size, shift_size):
+    x, H, W, C, Hp, Wp = self.pad(x, window_size)  
+
+    if self._shift  == True:
+      shifts = [(0, 0), (shift_size[0], shift_size[1])] # 6 ms latency, 9 ms latency 
+    elif self._shift is None:
+      shifts = [(shift_size[0], shift_size[1])]
+    else:
+      shifts = [(0, 0)] # 6 ms latency
+
+    windows = []
+    bsize = []
+    for shift in shifts:
+      # cyclic shift 
+      if shift[0] != 0 or shift[1] != 0:
+        shifted_x = x[:, (shift[0]):(Hp - (window_size[0] - shift[0])), (shift[1]):(Wp - (window_size[1] - shift[1])), :]
+        attn_mask = None
+      else:
+        shifted_x = x
+        attn_mask = None 
+
+      x_windows = window_partition(shifted_x, window_size) # nW*B, window_size, window_size, C
+      windows.append(x_windows)
+
+      nwin = tf.shape(x_windows)
+      bsize.append(nwin[0])
+    x_windows = tf.concat(windows, axis = 0)
+    return x, x_windows, shifts, bsize, H, W, C, Hp, Wp
+  
+  def upad_and_unshift(self, attn_windows, split_sizes, Hp, Wp, window_size, shifts, H, W):
+    x_output = None
+    windows = tf.split(attn_windows, split_sizes, axis = 0)
+    for shift, attn_windows in zip(shifts, windows):
+      if shift[0] != 0 or shift[1] != 0:
+        shifted_x = window_reverse(attn_windows, window_size, (Hp - window_size[0]), (Wp - window_size[1])) # B H' W' C
+        shifted_x = tf.pad(shifted_x, [[0,0], [shift[0], window_size[0] - shift[0]], [shift[1], window_size[1] - shift[1]], [0, 0]]) 
+      else:
+        shifted_x = window_reverse(attn_windows, window_size, Hp, Wp) # B H' W' C
+
+      if x_output is None:
+        x_output = shifted_x
+      else:
+        x_output = x_output + shifted_x
+
+    if Hp != H or Wp != W:
+      x_output = x_output[:, :H, :W, :]
+    return x_output
+
+  def call(self, query, source, mask = None, training = None):
+
+    (q, q_windows, q_shifts, 
+    q_split_size, qH, qW, 
+    qC, qHp, qWp) = self.pad_and_shift_input(query, 
+                                             self._query_window_size, 
+                                             self._query_shift_size )
+
+    (s, s_windows, s_shifts, 
+    s_split_size, sH, sW, 
+    sC, sHp, sWp) = self.pad_and_shift_input(source, 
+                                             self._source_window_size, 
+                                             self._source_shift_size )
+
+
+    attn_windows, attn = self.attention(q_windows, 
+                                        s_windows, 
+                                        mask = mask, 
+                                        training = training) # output is in the queries frame of ref
+
+    x_output = self.upad_and_unshift(
+      attn_windows, 
+      q_split_size, 
+      qHp,
+      qWp, 
+      self._query_window_size, 
+      q_shifts, 
+      qH, 
+      qW, 
+    )
+
+    return x_output
 
 if __name__ == "__main__":
   inputs = {"3": [2, 7, 7, 256], "4": [2, 14, 14, 256], "5": [2, 28, 28, 256]}
@@ -365,6 +552,6 @@ if __name__ == "__main__":
   for k, s in inputs.items():
     built[k] = tf.ones(inputs[k])
 
-  layer = WindowedAttention(16, kernel_size=(3, 3))
+  layer = ShiftedWindowAttention(28, 14, 8, kernel_size=(3, 3))
   output, _ = layer(built["5"], built["4"])
   print(output.shape)
