@@ -1,11 +1,13 @@
 from numpy.core.defchararray import center
 import tensorflow as tf
 import numpy as np
+import math
 
 from yolo.ops.box_ops import compute_iou, compute_diou, compute_giou, compute_ciou
 from yolo.ops.box_ops import yxyx_to_xcycwh
 from official.core import input_reader
 import matplotlib.patches as patches
+from yolo.ops import math_ops
 
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import cm
@@ -15,15 +17,29 @@ from matplotlib.pyplot import cm
  [97.0, 277.0], [371.0, 184.0], [211.0, 352.0], [428.0, 419.0]]
 
 
+def ar_terms(X, centroids_X):
+
+  b1w, b1h = tf.split(X, 2, axis=-1)
+  b2w, b2h = tf.split(centroids_X, 2, axis=-1)
+
+  terma = math_ops.divide_no_nan(b1w, b1h)  # gt
+  termb = math_ops.divide_no_nan(b2w, b2h)  # pred
+  arcterm = tf.squeeze(
+      tf.math.pow(tf.math.atan(termb) - tf.math.atan(terma), 2), axis=-1)
+  v = (4 / math.pi**2) * arcterm
+  return v
+
 def IOU(X, centroids_X):
+  # X = tf.math.sqrt(X + 0.00001)
+  # centroids_X = tf.math.sqrt(centroids_X + 0.00001)
+  
   x = tf.concat([tf.zeros_like(X), X], axis = -1)
   centroids = tf.concat([tf.zeros_like(centroids_X), centroids_X], axis = -1)
 
-  iou2, iou = compute_giou(x, centroids)
+  # iou2, iou = compute_giou(x, centroids)
 
-  # iou = (iou + 1)/2
   iou, _ = compute_giou(x, centroids)
-
+  iou = iou #- rg
   # x_area = tf.reduce_prod(X, axis = -1)
   # centroids_area = tf.reduce_prod(centroids_X, axis = -1)
   # mse = (x_area - centroids_area) ** 2
@@ -31,7 +47,9 @@ def IOU(X, centroids_X):
   # x_ar = X[..., 0]/X[..., 1]
   # centroids_ar = centroids_X[..., 0]/centroids_X[..., 1]
   # mse = (x_ar - centroids_ar) ** 2
-  return iou #+ mse
+  return iou
+
+
 
 class AnchorKMeans:
   """K-means for YOLO anchor box priors
@@ -242,6 +260,7 @@ class AnchorKMeans:
       dists = 1 - self.iou(boxes, clusters)
       curr = tf.math.argmin(dists, axis=-1)
       clusters = self.maximization(boxes, clusters, curr)
+      print(np.floor(clusters.numpy()).tolist())
       tf.print('k-Means box generation iteration: ', num_iters, end='\r')
       num_iters += 1
 
@@ -328,40 +347,51 @@ class AnchorKMeans:
 
   def __call__(self, dataset, k, anchors = None, anchors_per_scale = None, image_resolution=512):
     self.get_box_from_dataset(dataset)
-    self._boxes *= tf.convert_to_tensor(image_resolution[:2], self._boxes.dtype)
+    # self._boxes *= tf.convert_to_tensor(image_resolution[:2], self._boxes.dtype)
+    boxes_ls = tf.math.sqrt(self._boxes.numpy())
 
-
-
+    anchors_per_scale = None
     if anchors_per_scale is None:
-      clusters, assignments = self.run_kmeans(k, self._boxes)
+      clusters, assignments = self.run_kmeans(k, boxes_ls, type = "split_means")
+      # clusters, assignments, iou = self.avg_iou_total(boxes_ls, clusters)
+
+      self._boxes *= tf.convert_to_tensor(image_resolution[:2], self._boxes.dtype)
+      clusters = self.maximization(self._boxes, clusters, assignments)
       clusters, assignments, iou = self.avg_iou_total(self._boxes, clusters)
       print(np.mean(iou))
       self.plot_boxes(self._boxes, clusters, assignments, image_resolution)
     else:
-      boxes_ls = self._boxes.numpy()
-
-      clustersp, assignments = self.run_kmeans(anchors_per_scale, boxes_ls, type = "split_means")
-      clustersp += np.roll(clustersp, 1, axis = -1)
-      clustersp /= 2
 
       clusters1 = self.get_init_centroids(boxes_ls, anchors_per_scale, type = "split_means")
+      # clusters1 = self.get_init_centroids(boxes_ls, k//anchors_per_scale, type = "over_split_means")
       clusters1 += np.roll(clusters1, 1, axis = -1)
       clusters1 /= 2
-      
-      clusters1 = (clustersp + clusters1*4)/5
 
       boxes_set1 = self.get_boxes(boxes_ls, clusters1)
       clusters = []
       for boxes in boxes_set1:
         cluster_set, assignments = self.run_kmeans(k//anchors_per_scale, boxes, type = "split_means")
-        #cluster_set, assignments, ious = self.avg_iou_total(boxes, cluster_set)
+        # cluster_set, assignments = self.run_kmeans(anchors_per_scale, boxes, type = "split_means")
+        # cluster_set, assignments, ious = self.avg_iou_total(boxes, cluster_set)
         clusters.extend(cluster_set)
+      clusters1, assignments, iou = self.avg_iou_total(boxes_ls, clusters)
+      clusters2, assignments = self.run_kmeans(k, self._boxes, type = "split_means")
+
+      clusters3 = self.get_init_centroids(boxes_ls, k, type = "split_means")
+      clusters3 += np.roll(clusters3, 1, axis = -1)
+      clusters3 /= 2
+
+      clusters = (clusters1 + clusters3 + clusters2)/3
       clusters, assignments, iou = self.avg_iou_total(boxes_ls, clusters)
+
+      self._boxes *= tf.convert_to_tensor(image_resolution[:2], self._boxes.dtype)
+      clusters = self.maximization(self._boxes, clusters, assignments)
+      clusters, assignments, iou = self.avg_iou_total(self._boxes, clusters)
       print(np.mean(iou))
-      self.plot_boxes(boxes_ls, clusters, assignments, image_resolution)
+      self.plot_boxes(self._boxes, clusters, assignments, image_resolution)
 
         
-
+    
     clusters, assignments, iou = self.avg_iou_total(self._boxes, anchors)
     print(np.mean(iou))
     self.plot_boxes(self._boxes, clusters, assignments, image_resolution)

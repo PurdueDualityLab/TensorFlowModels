@@ -94,7 +94,7 @@ task:
       area_thresh: 0.1
   validation_data:
     global_batch_size: 8
-    input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/val*'
+    input_path: '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
     # tfds_name: coco
     # tfds_data_dir: '/media/vbanna/DATA_SHARE/CV/datasets/tensorflow/'
     # tfds_split: validation
