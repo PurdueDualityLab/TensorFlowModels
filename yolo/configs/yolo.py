@@ -461,7 +461,7 @@ def scaled_yolo_3l_coco() -> cfg.ExperimentConfig:
   train_epochs = 300
   warmup_epochs = 3
   
-  validation_interval = 5
+  validation_interval = 3
   steps_per_epoch = COCO_TRAIN_EXAMPLES // train_batch_size
 
   max_num_instances = 300
@@ -581,7 +581,7 @@ def large_yolo() -> cfg.ExperimentConfig:
   fine_tune_epochs = 450
   warmup_epochs = 3
 
-  validation_interval = 5
+  validation_interval = 3
   steps_per_epoch = COCO_TRAIN_EXAMPLES // train_batch_size
 
   max_num_instances = 300
