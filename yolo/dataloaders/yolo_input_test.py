@@ -33,9 +33,9 @@ from yolo.utils.run_utils import prep_gpu
 def test_yolo_input_task():
   # with tf.device('/CPU:0'):
   # experiment = "yolo_darknet"
-  experiment = "scaled_yolo"
+  experiment = "large_yolo"
   # config_path = ["yolo/configs/experiments/yolov4/tpu/512-wd.yaml"]
-  config_path = ["yolo/configs/experiments/yolov4/tpu/512-swin-smooth.yaml"]
+  config_path = ["yolo/configs/experiments/scaledyolov4-p6/yolo_l_p6_1280_tpu.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/inference/640.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp-anchor-free/tpu/640.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4/tpu/512-mb.yaml"]
@@ -47,7 +47,7 @@ def test_yolo_input_task():
 
   task = task_factory.get_task(params.task)
 
-  config.train_data.global_batch_size = 64
+  config.train_data.global_batch_size = 1
   config.validation_data.global_batch_size = 1
 
   config.train_data.dtype = 'float32'
@@ -158,9 +158,10 @@ def test_yolo_pipeline(is_training=True, num=30):
     obj3 = tf.clip_by_value(gt['3'][..., 0], 0.0, 1.0)
     obj4 = tf.clip_by_value(gt['4'][..., 0], 0.0, 1.0)
     obj5 = tf.clip_by_value(gt['5'][..., 0], 0.0, 1.0)
+    obj6 = tf.clip_by_value(gt['6'][..., 0], 0.0, 1.0)
 
     for shind in range(1):
-      fig, axe = plt.subplots(1, 5)
+      fig, axe = plt.subplots(1, 6)
 
       image = i[shind]
       boxes = j["bbox"][shind]
@@ -184,10 +185,11 @@ def test_yolo_pipeline(is_training=True, num=30):
       # ind_xy = tf.concat([y, x], axis=-1)
       # tf.print(true_xy - ind_xy, summarize=-1)
       axe[0].imshow(image)
-      axe[1].imshow(obj3[shind].numpy())
-      axe[2].imshow(obj4[shind].numpy())
-      axe[3].imshow(obj5[shind].numpy())
-      axe[4].imshow(i_[shind].numpy())
+      axe[1].imshow(obj3[shind, ...,  :3].numpy())
+      axe[2].imshow(obj4[shind, ..., :3].numpy())
+      axe[3].imshow(obj5[shind, ..., :3].numpy())
+      axe[4].imshow(obj6[shind, ..., :3].numpy())
+      axe[5].imshow(i_[shind].numpy())
 
       fig.set_size_inches(18.5, 6.5, forward=True)
       plt.tight_layout()

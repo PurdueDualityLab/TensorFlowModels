@@ -664,6 +664,7 @@ class AnchorFreeLoss(ScaledLoss):
 
     # Compute the box loss.
     _, iou, box_loss = self.box_loss(true_box, pred_box, darknet=False)
+    box_loss = tf.square(box_loss)
     box_loss = loss_utils.apply_mask(tf.squeeze(ind_mask, axis=-1), box_loss)
     box_loss = tf.reduce_sum(box_loss)
 
@@ -720,7 +721,7 @@ class AnchorFreeLoss(ScaledLoss):
 
   def cross_replica_aggregation(self, loss, num_replicas_in_sync):
     """This method is not specific to each loss path, but each loss type."""
-    return loss #/num_replicas_in_sync
+    return loss/num_replicas_in_sync
 
 class YoloLoss:
   """This class implements the aggregated loss across YOLO model FPN levels."""
