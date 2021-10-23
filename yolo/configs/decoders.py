@@ -7,8 +7,11 @@ from official.vision.beta.configs import decoders
 
 @dataclasses.dataclass
 class YoloDecoder(hyperparams.Config):
-  """if the name is specified, or version is specified we ignore 
-  input parameters and use version and name defaults"""
+  """Builds Yolo decoder.
+
+  If the name is specified, or version is specified we ignore input parameters
+  and use version and name defaults.
+  """
   version: Optional[str] = None
   type: Optional[str] = None
   use_fpn: Optional[bool] = None
@@ -16,6 +19,8 @@ class YoloDecoder(hyperparams.Config):
   use_separable_conv: bool = False
   csp_stack: Optional[bool] = None
   fpn_depth: Optional[int] = None
+  max_fpn_depth: Optional[int] = None
+  max_csp_stack: Optional[int] = None
   fpn_filter_scale: Optional[int] = None
   path_process_len: Optional[int] = None
   max_level_process_len: Optional[int] = None
