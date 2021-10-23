@@ -243,18 +243,25 @@ class WindowedAttention(tf.keras.layers.Layer):
                groups = 1, 
                strides = 1, 
                use_separable_conv = True, 
+               use_bn=True,
+               use_sync_bn=False,
+               norm_momentum=0.99,
+               norm_epsilon=0.001,
                dilation_rate = 1, 
                qkv_bias = True, 
                qk_scale = None, 
                attention_dropout = 0.0, 
                attention_activation = 'softmax', # typically jsut soft max, more for future developments of something better 
+               project_attention = True, 
+               projection_dropout = 0.0, 
+               projection_expansion = 1.0,
+               projection_use_bias = False, 
+               projection_activation = None, 
                relative_bias_initializer='TruncatedNormal', 
                kernel_initializer='TruncatedNormal',
                kernel_regularizer=None,
                bias_initializer='zeros',
                bias_regularizer=None, 
-               project_attention = True, 
-               projection_dropout = 0.0, 
                **kwargs):
     super().__init__(**kwargs)
     self._pre_kernel_size = kernel_size
@@ -264,17 +271,23 @@ class WindowedAttention(tf.keras.layers.Layer):
     self._use_separable_conv = use_separable_conv
     self._dilation_rate = dilation_rate
 
+    self._use_bn = use_bn
+    self._use_sync_bn = use_sync_bn
+    self._norm_momentum = norm_momentum
+    self._norm_epsilon = norm_epsilon
+
     self._num_heads = num_heads
     self._qkv_bias = qkv_bias
     self._qk_scale = qk_scale 
 
     self._project_attention = project_attention
+    self._projection_dropout = projection_dropout
+    self._projection_expansion = projection_expansion
+    self._projection_use_bias = projection_use_bias
+    self._projection_activation = projection_activation
 
     # dropout
     self._attention_dropout = attention_dropout
-    self._projection_dropout = projection_dropout
-
-    # activation 
     self._attention_activation = attention_activation
 
     # init and regularizer
@@ -329,16 +342,19 @@ class WindowedAttention(tf.keras.layers.Layer):
 
     if self._project_attention:
       self.projection = nn_blocks.ConvBN(
-        filters = self.dims, 
+        filters = int(self.dims * self._projection_expansion),
         groups = self._groups, 
         kernel_size = self._post_kernel_size, 
         strides = self._strides, 
         padding = "same", 
-        use_bias = self._qkv_bias,
-        use_bn = False, 
-        activation = None, 
+        use_bias = self._projection_use_bias,
+        use_bn = self._use_bn,
+        use_sync_bn = self._use_sync_bn,
+        norm_momentum = self._norm_momentum,
+        norm_epsilon = self._norm_epsilon,
+        activation = self._projection_activation, 
         use_separable_conv = self._use_separable_conv, 
-        dilation_rate = self._dilation_rate, 
+        dilation_rate = self._dilation_rate,
         **self._init_args
       )
     
@@ -370,19 +386,26 @@ class ShiftedWindowAttention(tf.keras.layers.Layer):
                groups = 1, 
                strides = 1, 
                use_separable_conv = True, 
+               use_bn=True,
+               use_sync_bn=False,
+               norm_momentum=0.99,
+               norm_epsilon=0.001,
                dilation_rate = 1, 
                qkv_bias = True, 
                qk_scale = None, 
-               drop_path = 0.0, 
+               drop_path = 0.0,
                attention_dropout = 0.0, 
                attention_activation = 'softmax', # typically jsut soft max, more for future developments of something better 
+               project_attention = True, 
+               projection_dropout = 0.0, 
+               projection_expansion = 1.0,
+               projection_use_bias = False, 
+               projection_activation = None, 
                relative_bias_initializer='TruncatedNormal', 
                kernel_initializer='TruncatedNormal',
                kernel_regularizer=None,
                bias_initializer='zeros',
                bias_regularizer=None, 
-               project_attention = True, 
-               projection_dropout = 0.0, 
                **kwargs):
 
     super().__init__(**kwargs)
@@ -409,15 +432,21 @@ class ShiftedWindowAttention(tf.keras.layers.Layer):
     self._qk_scale = qk_scale 
     self._shift = shift
 
+    self._use_bn = use_bn
+    self._use_sync_bn = use_sync_bn
+    self._norm_momentum = norm_momentum
+    self._norm_epsilon = norm_epsilon
+
     self._project_attention = project_attention
+    self._projection_dropout = projection_dropout
+    self._projection_expansion = projection_expansion
+    self._projection_use_bias = projection_use_bias
+    self._projection_activation = projection_activation
 
     # dropout
-    self._attention_dropout = attention_dropout
-    self._projection_dropout = projection_dropout
-    self._drop_path = drop_path
-
-    # activation 
     self._attention_activation = attention_activation
+    self._attention_dropout = attention_dropout
+    self._drop_path = drop_path
 
     # init and regularizer
     self._init_args = dict(
@@ -427,7 +456,6 @@ class ShiftedWindowAttention(tf.keras.layers.Layer):
       bias_regularizer = bias_regularizer,
       relative_bias_initializer = _get_initializer(relative_bias_initializer)
     )
-
     return 
 
 
@@ -442,10 +470,17 @@ class ShiftedWindowAttention(tf.keras.layers.Layer):
       dilation_rate=self._dilation_rate, 
       qkv_bias=self._qkv_bias, 
       qk_scale=self._qk_scale, 
+      use_bn = self._use_bn,
+      use_sync_bn = self._use_sync_bn,
+      norm_momentum = self._norm_momentum,
+      norm_epsilon = self._norm_epsilon,
       attention_dropout=self._attention_dropout, 
       attention_activation=self._attention_activation, 
-      project_attention = self._project_attention, 
+      project_attention = self._project_attention,
       projection_dropout = self._projection_dropout,
+      projection_expansion = self._projection_expansion,
+      projection_use_bias = self._projection_use_bias,
+      projection_activation = self._projection_activation,
       **self._init_args 
     )
 
@@ -552,6 +587,6 @@ if __name__ == "__main__":
   for k, s in inputs.items():
     built[k] = tf.ones(inputs[k])
 
-  layer = ShiftedWindowAttention(28, 14, 8, kernel_size=(3, 3))
+  layer = ShiftedWindowAttention(28, 14, 8, kernel_size=(3, 3), projection_expansion = 2.0)
   output, _ = layer(built["5"], built["4"])
   print(output.shape)
