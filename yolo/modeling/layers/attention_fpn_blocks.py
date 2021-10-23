@@ -17,7 +17,7 @@
 import logging
 from official.vision.beta.ops import spatial_transform_ops
 from typing import List, Tuple
-from yolo.modeling.layers import nn_blocks
+from yolo.modeling.layers import nn_blocks, attention_blocks
 import tensorflow as tf
 import numpy as np
 from official.modeling import tf_utils
@@ -98,6 +98,63 @@ def window_reverse(x, window_size, H, W):
   x = tf.transpose(x, perm=(0, 1, 3, 2, 4, 5))
   x = tf.reshape(x, [-1, H, W, C])
   return x
+
+def pad(x, window_size):
+  _, H, W, C = x.shape
+  pad_l = pad_t = 0 
+  pad_r = (window_size[1] - W % window_size[1]) % window_size[1]
+  pad_b = (window_size[0] - H % window_size[0]) % window_size[0]  
+  x = tf.pad(x, [[0,0], [pad_t, pad_b], [pad_l, pad_r], [0, 0]]) 
+  _, Hp, Wp, _ = x.shape
+  return x, H, W, C, Hp, Wp
+
+def pad_and_shift_input(x, window_size, shift_size, shift):
+  x, H, W, C, Hp, Wp = pad(x, window_size)  
+
+  if shift  == True:
+    shifts = [(0, 0), (shift_size[0], shift_size[1])] # 6 ms latency, 9 ms latency 
+  elif shift is None:
+    shifts = [(shift_size[0], shift_size[1])]
+  else:
+    shifts = [(0, 0)] # 6 ms latency
+
+  windows = []
+  bsize = []
+  for shift in shifts:
+    # cyclic shift 
+    if shift[0] != 0 or shift[1] != 0:
+      shifted_x = x[:, (shift[0]):(Hp - (window_size[0] - shift[0])), (shift[1]):(Wp - (window_size[1] - shift[1])), :]
+      attn_mask = None
+    else:
+      shifted_x = x
+      attn_mask = None 
+
+    x_windows = window_partition(shifted_x, window_size) # nW*B, window_size, window_size, C
+    windows.append(x_windows)
+
+    nwin = tf.shape(x_windows)
+    bsize.append(nwin[0])
+  x_windows = tf.concat(windows, axis = 0)
+  return x, x_windows, shifts, bsize, H, W, C, Hp, Wp
+
+def upad_and_unshift(attn_windows, split_sizes, Hp, Wp, window_size, shifts, H, W):
+  x_output = None
+  windows = tf.split(attn_windows, split_sizes, axis = 0)
+  for shift, attn_windows in zip(shifts, windows):
+    if shift[0] != 0 or shift[1] != 0:
+      shifted_x = window_reverse(attn_windows, window_size, (Hp - window_size[0]), (Wp - window_size[1])) # B H' W' C
+      shifted_x = tf.pad(shifted_x, [[0,0], [shift[0], window_size[0] - shift[0]], [shift[1], window_size[1] - shift[1]], [0, 0]]) 
+    else:
+      shifted_x = window_reverse(attn_windows, window_size, Hp, Wp) # B H' W' C
+
+    if x_output is None:
+      x_output = shifted_x
+    else:
+      x_output = x_output + shifted_x
+
+  if Hp != H or Wp != W:
+    x_output = x_output[:, :H, :W, :]
+  return x_output
 
 class Identity(tf.keras.layers.Layer):
 
@@ -375,7 +432,6 @@ class WindowedAttention(tf.keras.layers.Layer):
 
 class ShiftedWindowAttention(tf.keras.layers.Layer):
 
-
   def __init__(self, 
                query_window_size, 
                source_window_size,
@@ -490,76 +546,21 @@ class ShiftedWindowAttention(tf.keras.layers.Layer):
       self.drop_path = Identity()
     return
 
-  def pad(self, x, window_size):
-    _, H, W, C = x.shape
-    pad_l = pad_t = 0 
-    pad_r = (window_size[1] - W % window_size[1]) % window_size[1]
-    pad_b = (window_size[0] - H % window_size[0]) % window_size[0]  
-    x = tf.pad(x, [[0,0], [pad_t, pad_b], [pad_l, pad_r], [0, 0]]) 
-    _, Hp, Wp, _ = x.shape
-    return x, H, W, C, Hp, Wp
-
-  def pad_and_shift_input(self, x, window_size, shift_size):
-    x, H, W, C, Hp, Wp = self.pad(x, window_size)  
-
-    if self._shift  == True:
-      shifts = [(0, 0), (shift_size[0], shift_size[1])] # 6 ms latency, 9 ms latency 
-    elif self._shift is None:
-      shifts = [(shift_size[0], shift_size[1])]
-    else:
-      shifts = [(0, 0)] # 6 ms latency
-
-    windows = []
-    bsize = []
-    for shift in shifts:
-      # cyclic shift 
-      if shift[0] != 0 or shift[1] != 0:
-        shifted_x = x[:, (shift[0]):(Hp - (window_size[0] - shift[0])), (shift[1]):(Wp - (window_size[1] - shift[1])), :]
-        attn_mask = None
-      else:
-        shifted_x = x
-        attn_mask = None 
-
-      x_windows = window_partition(shifted_x, window_size) # nW*B, window_size, window_size, C
-      windows.append(x_windows)
-
-      nwin = tf.shape(x_windows)
-      bsize.append(nwin[0])
-    x_windows = tf.concat(windows, axis = 0)
-    return x, x_windows, shifts, bsize, H, W, C, Hp, Wp
-  
-  def upad_and_unshift(self, attn_windows, split_sizes, Hp, Wp, window_size, shifts, H, W):
-    x_output = None
-    windows = tf.split(attn_windows, split_sizes, axis = 0)
-    for shift, attn_windows in zip(shifts, windows):
-      if shift[0] != 0 or shift[1] != 0:
-        shifted_x = window_reverse(attn_windows, window_size, (Hp - window_size[0]), (Wp - window_size[1])) # B H' W' C
-        shifted_x = tf.pad(shifted_x, [[0,0], [shift[0], window_size[0] - shift[0]], [shift[1], window_size[1] - shift[1]], [0, 0]]) 
-      else:
-        shifted_x = window_reverse(attn_windows, window_size, Hp, Wp) # B H' W' C
-
-      if x_output is None:
-        x_output = shifted_x
-      else:
-        x_output = x_output + shifted_x
-
-    if Hp != H or Wp != W:
-      x_output = x_output[:, :H, :W, :]
-    return x_output
-
   def call(self, query, source, mask = None, training = None):
 
     (q, q_windows, q_shifts, 
     q_split_size, qH, qW, 
-    qC, qHp, qWp) = self.pad_and_shift_input(query, 
-                                             self._query_window_size, 
-                                             self._query_shift_size )
+    qC, qHp, qWp) = pad_and_shift_input(query, 
+                                        self._query_window_size, 
+                                        self._query_shift_size, 
+                                        shift = self._shift)
 
     (s, s_windows, s_shifts, 
     s_split_size, sH, sW, 
-    sC, sHp, sWp) = self.pad_and_shift_input(source, 
-                                             self._source_window_size, 
-                                             self._source_shift_size )
+    sC, sHp, sWp) = pad_and_shift_input(source, 
+                                        self._source_window_size, 
+                                        self._source_shift_size, 
+                                        shift = self._shift)
 
 
     attn_windows, attn = self.attention(q_windows, 
@@ -567,26 +568,431 @@ class ShiftedWindowAttention(tf.keras.layers.Layer):
                                         mask = mask, 
                                         training = training) # output is in the queries frame of ref
 
-    x_output = self.upad_and_unshift(
-      attn_windows, 
-      q_split_size, 
-      qHp,
-      qWp, 
-      self._query_window_size, 
-      q_shifts, 
-      qH, 
-      qW, 
-    )
+    x_output = upad_and_unshift(attn_windows, q_split_size, qHp,qWp, 
+        self._query_window_size, q_shifts, qH, qW)
 
     return x_output
 
+class ShiftedWindowSelfAttention(tf.keras.layers.Layer):
+
+  def __init__(self, 
+               window_size, 
+               num_heads, 
+               shift = False, 
+               kernel_size = 1,
+               post_kernel_size = None,
+               groups = 1, 
+               strides = 1, 
+               use_separable_conv = True, 
+               use_bn=True,
+               use_sync_bn=False,
+               norm_momentum=0.99,
+               norm_epsilon=0.001,
+               dilation_rate = 1, 
+               qkv_bias = True, 
+               qk_scale = None, 
+               drop_path = 0.0,
+               attention_dropout = 0.0, 
+               attention_activation = 'softmax', # typically jsut soft max, more for future developments of something better 
+               project_attention = True, 
+               projection_dropout = 0.0, 
+               projection_expansion = 1.0,
+               projection_use_bias = False, 
+               projection_activation = None, 
+               relative_bias_initializer='TruncatedNormal', 
+               kernel_initializer='TruncatedNormal',
+               kernel_regularizer=None,
+               bias_initializer='zeros',
+               bias_regularizer=None, 
+               **kwargs):
+
+    super().__init__(**kwargs)
+    self._kernel_size = kernel_size
+    self._post_kernel_size = post_kernel_size or kernel_size
+    self._groups = groups
+    self._strides = strides
+    self._use_separable_conv = use_separable_conv
+    self._dilation_rate = dilation_rate
+
+    if isinstance(window_size, int):
+      window_size = (window_size, window_size)
+    self._window_size = window_size
+    self._shift_size = (window_size[0]//2, window_size[1]//2)
+
+    self._num_heads = num_heads
+    self._qkv_bias = qkv_bias
+    self._qk_scale = qk_scale 
+    self._shift = shift
+
+    self._use_bn = use_bn
+    self._use_sync_bn = use_sync_bn
+    self._norm_momentum = norm_momentum
+    self._norm_epsilon = norm_epsilon
+
+    self._project_attention = project_attention
+    self._projection_dropout = projection_dropout
+    self._projection_expansion = projection_expansion
+    self._projection_use_bias = projection_use_bias
+    self._projection_activation = projection_activation
+
+    # dropout
+    self._attention_activation = attention_activation
+    self._attention_dropout = attention_dropout
+    self._drop_path = drop_path
+
+    # init and regularizer
+    self._init_args = dict(
+      kernel_initializer = _get_initializer(kernel_initializer),
+      bias_initializer = bias_initializer,
+      kernel_regularizer = kernel_regularizer,
+      bias_regularizer = bias_regularizer,
+      relative_bias_initializer = _get_initializer(relative_bias_initializer)
+    )
+    return 
+
+
+  def build(self, input_shape):
+    self.attention = WindowedAttention(
+      self._num_heads,
+      kernel_size=self._kernel_size,
+      post_kernel_size=self._post_kernel_size,
+      groups=self._groups, 
+      strides=self._strides, 
+      use_separable_conv=self._use_separable_conv, 
+      dilation_rate=self._dilation_rate, 
+      qkv_bias=self._qkv_bias, 
+      qk_scale=self._qk_scale, 
+      use_bn = self._use_bn,
+      use_sync_bn = self._use_sync_bn,
+      norm_momentum = self._norm_momentum,
+      norm_epsilon = self._norm_epsilon,
+      attention_dropout=self._attention_dropout, 
+      attention_activation=self._attention_activation, 
+      project_attention = self._project_attention,
+      projection_dropout = self._projection_dropout,
+      projection_expansion = self._projection_expansion,
+      projection_use_bias = self._projection_use_bias,
+      projection_activation = self._projection_activation,
+      **self._init_args 
+    )
+
+    if self._drop_path > 0.0:
+      self.drop_path = nn_layers.StochasticDepth(self._drop_path)
+    else:
+      self.drop_path = Identity()
+    return
+
+  def call(self, x, mask = None, training = None):
+    (x, x_windows, x_shifts, 
+    x_split_size, H, W, 
+    C, Hp, Wp) = pad_and_shift_input(
+        x, self._window_size, self._shift_size, shift = self._shift)
+
+    attn_windows, attn = self.attention(x_windows, x_windows, mask = mask, 
+        training = training) # output is in the queries frame of ref
+
+    x_output = upad_and_unshift(attn_windows, x_split_size, Hp,Wp, 
+        self._window_size, x_shifts, H, W)
+    return x_output
+
+class MergeShapeToMatch(tf.keras.layers.Layer):
+  def __init__(self, 
+               window_size, 
+               num_heads, 
+               mlp_ratio = 1.5, 
+               shift = False, 
+               kernel_size = 1,
+               post_kernel_size = None,
+               groups = 1, 
+               strides = 1, 
+               use_separable_conv = False, 
+               use_bn=True,
+               use_sync_bn=False,
+               norm_momentum=0.99,
+               norm_epsilon=0.001,
+               dilation_rate = 1, 
+               qkv_bias = True, 
+               qk_scale = None, 
+               drop_path = 0.0,
+               attention_dropout = 0.0, 
+               attention_activation = 'softmax', # typically jsut soft max, more for future developments of something better 
+               expansion_activation = None, 
+               project_attention = True, 
+               projection_dropout = 0.0, 
+               projection_expansion = 1.0,
+               projection_use_bias = False, 
+               projection_use_bn = False, 
+               projection_activation = None, 
+               relative_bias_initializer='TruncatedNormal', 
+               kernel_initializer='TruncatedNormal',
+               kernel_regularizer=None,
+               bias_initializer='zeros',
+               bias_regularizer=None, 
+               **kwargs):
+
+    super().__init__(**kwargs)
+    self._kernel_size = kernel_size
+    self._post_kernel_size = post_kernel_size or kernel_size
+    self._groups = groups
+    self._strides = strides
+    self._use_separable_conv = use_separable_conv
+    self._dilation_rate = dilation_rate
+
+    if isinstance(window_size, int):
+      window_size = (window_size, window_size)
+    self._window_size = window_size
+
+    self._num_heads = num_heads
+    self._qkv_bias = qkv_bias
+    self._qk_scale = qk_scale 
+    self._shift = shift
+    self._mlp_ratio = mlp_ratio
+
+    self._use_bn = use_bn
+    self._use_sync_bn = use_sync_bn
+    self._norm_momentum = norm_momentum
+    self._norm_epsilon = norm_epsilon
+
+    self._project_attention = project_attention
+    self._projection_dropout = projection_dropout
+    self._projection_expansion = projection_expansion
+    self._projection_use_bias = projection_use_bias
+    self._projection_activation = projection_activation
+    self._projection_use_bn = projection_use_bn
+
+    self._expansion_activation = expansion_activation
+    # dropout
+    self._attention_activation = attention_activation
+    self._attention_dropout = attention_dropout
+    self._drop_path = drop_path
+
+    # init and regularizer
+    self._relative_bias_initializer = _get_initializer(relative_bias_initializer)
+    self._init_args = dict(
+      kernel_initializer = _get_initializer(kernel_initializer),
+      bias_initializer = bias_initializer,
+      kernel_regularizer = kernel_regularizer,
+      bias_regularizer = bias_regularizer,
+    )
+    return 
+
+  def build(self, input_shape):
+    source_shape, query_shape = input_shape # [upsample, match]
+    self.dims = int(query_shape[-1] * self._projection_expansion)
+    
+    self._sample_size = (query_shape[1]/source_shape[1], 
+                         query_shape[2]/source_shape[2])
+    self._query_window_size = (int(self._window_size[0] * self._sample_size[0]),
+                               int(self._window_size[1] * self._sample_size[0]))
+
+    if max(self._sample_size) == min(self._sample_size) and self._sample_size[0] > 1:
+      self._upsample = True 
+      self._sample_size = (int(self._sample_size[0]), int(self._sample_size[1]))
+    elif max(self._sample_size) == min(self._sample_size) and self._sample_size[0] < 1:
+      self._upsample = False
+      self._sample_size = (int(source_shape[1]/query_shape[1]), 
+                           int(source_shape[2]/query_shape[2]))
+    else:
+      self._upsample = None
+
+    self.mapping_attention = ShiftedWindowAttention(
+        self._query_window_size,
+        self._window_size, 
+        shift = self._shift,
+        num_heads = self._num_heads,
+        kernel_size=self._kernel_size,
+        post_kernel_size=self._post_kernel_size,
+        groups=self._groups, 
+        strides=self._strides, 
+        use_separable_conv=self._use_separable_conv, 
+        dilation_rate=self._dilation_rate, 
+        qkv_bias=self._qkv_bias, 
+        qk_scale=self._qk_scale, 
+        use_bn = self._projection_use_bn,
+        use_sync_bn = self._use_sync_bn,
+        norm_momentum = self._norm_momentum,
+        norm_epsilon = self._norm_epsilon,
+        attention_dropout=self._attention_dropout, 
+        attention_activation=self._attention_activation, 
+        project_attention = self._project_attention,
+        projection_dropout = self._projection_dropout,
+        projection_expansion = self._projection_expansion,
+        projection_use_bias = self._projection_use_bias,
+        projection_activation = self._projection_activation,
+        relative_bias_initializer = self._relative_bias_initializer,
+        **self._init_args)
+
+
+    if self._upsample == False:
+      self.pool = tf.keras.layers.MaxPool2D(
+              pool_size=self._sample_size,
+              strides=self._sample_size,
+              padding='same',
+              data_format=None)
+
+    if self.dims != source_shape[-1]:
+      self._channel_match = True
+      self.channel_match = nn_blocks.ConvBN(
+        filters = self.dims,
+        kernel_size = 1, 
+        strides = 1, 
+        padding = "same", 
+        use_bn = self._use_bn,
+        use_sync_bn = self._use_sync_bn,
+        norm_momentum = self._norm_momentum,
+        norm_epsilon = self._norm_epsilon,
+        activation = self._expansion_activation, 
+        use_separable_conv = self._use_separable_conv, 
+        dilation_rate = self._dilation_rate,
+        **self._init_args
+      )
+    else:
+      self._channel_match = False
+
+    self._s_layer_norm = _get_norm_fn(
+        "layer_norm", epsilon=self._norm_epsilon)(axis = -1)
+    self._q_layer_norm = _get_norm_fn(
+        "layer_norm", epsilon=self._norm_epsilon)(axis = -1)
+
+    self._ffn = FFN(
+      hidden_features=int(self.dims * self._mlp_ratio), 
+      kernel_size = 1, 
+      strides = 1, 
+      activation = self._expansion_activation, 
+      groups = self._groups, 
+      use_separable_conv = self._use_separable_conv, 
+      use_bn = self._use_bn,
+      use_sync_bn = self._use_sync_bn,
+      norm_momentum = self._norm_momentum,
+      norm_epsilon = self._norm_epsilon,
+      dilation_rate = self._dilation_rate,
+      **self._init_args
+    ) 
+    return
+  
+  def s_layer_norm(self, x):
+    _, H, W, C = x.shape
+    x = tf.reshape(x, [-1, H * W, C])
+    x = self._s_layer_norm(x) 
+    x = tf.reshape(x, [-1, H , W, C])
+    return x
+
+  def q_layer_norm(self, x):
+    _, H, W, C = x.shape
+    x = tf.reshape(x, [-1, H * W, C])
+    x = self._q_layer_norm(x) 
+    x = tf.reshape(x, [-1, H , W, C])
+    return x
+
+  def call(self, inputs, mask = None, training = None):
+    # maps px onto p(x+1) then adds it to the resampled source
+    source, query = inputs 
+
+    ns = self.s_layer_norm(source)
+    nq = self.q_layer_norm(query)
+    x = self.mapping_attention(nq, ns, mask = mask, training = training)
+    if self._upsample == True:
+      source = spatial_transform_ops.nearest_upsampling(source, self._sample_size[0])
+    elif self._upsample == False:
+      source = self.pool(source)
+    
+    if self._channel_match:
+      source = self.channel_match(source)
+
+    x = x + source
+    return source + self._ffn(x)
+
+# once patched channel tokens are established and preserved so K > 1 is ok
+
+# once unpatched channel tokens are no longer preserved so depth wise 
+# combining operations need to be done with K = 1 and spatial operations need 
+# to be restricted to each cahnnel map seperately
+ 
+# distort spatial tokens byl merging across spatial tokens
+
+class FFN(tf.keras.layers.Layer):
+
+  def __init__(self, 
+               hidden_features = None, 
+               out_features = None, 
+               kernel_size = (1, 1),
+               strides = (1, 1), 
+               activation = "mish", 
+               groups = 1, 
+               use_separable_conv = False, 
+               use_bn=True,
+               use_sync_bn=False,
+               norm_momentum=0.99,
+               norm_epsilon=0.001,
+               dilation_rate = 1, 
+               leaky_alpha=0.1,
+               cat_input = True,
+               kernel_initializer='TruncatedNormal',
+               kernel_regularizer=None,
+               bias_initializer='zeros',
+               bias_regularizer=None, 
+               **kwargs):
+    super().__init__(**kwargs)
+
+    # features 
+    self._hidden_features = hidden_features
+    self._out_features = out_features
+    self._cat_input = cat_input
+
+    # init and regularizer
+    self._init_args = dict(
+      kernel_size = kernel_size,
+      strides = strides,
+      activation = activation,
+      groups = groups,
+      use_separable_conv = use_separable_conv,
+      use_bn = use_bn,
+      use_sync_bn = use_sync_bn,
+      norm_momentum = norm_momentum,
+      norm_epsilon = norm_epsilon,
+      dilation_rate = dilation_rate,
+      kernel_initializer = _get_initializer(kernel_initializer),
+      bias_initializer = bias_initializer,
+      kernel_regularizer = kernel_regularizer,
+      bias_regularizer = bias_regularizer,
+      leaky_alpha = leaky_alpha)
+
+  def build(self, input_shape):
+    hidden_features = self._hidden_features or input_shape[-1]
+    out_features = self._out_features or input_shape[-1]
+    self.fc_expand = nn_blocks.ConvBN(filters = hidden_features,
+                                      **self._init_args)
+
+    self.fc_compress = nn_blocks.ConvBN(filters = out_features, 
+                                        **self._init_args)
+    return 
+
+  def call(self, x_in):
+    x = self.fc_expand(x_in)
+    x = self.fc_compress(x)
+    return x
+
+
+
+
+
 if __name__ == "__main__":
-  inputs = {"3": [2, 7, 7, 256], "4": [2, 14, 14, 256], "5": [2, 28, 28, 256]}
+  inputs = {"3": [2, 80, 80, 256], "4": [2, 40, 40, 512], "5": [2, 20, 20, 1024]}
 
   built = {}
   for k, s in inputs.items():
     built[k] = tf.ones(inputs[k])
 
-  layer = ShiftedWindowAttention(28, 14, 8, kernel_size=(1, 1), projection_expansion = 2.0)
-  output, _ = layer(built["5"], built["4"])
-  print(output.shape)
+  # layer = ShiftedWindowSelfAttention(20, 8, kernel_size=(1, 1), projection_expansion = 1.0)
+  # output, _ = layer(built["5"])
+  # print(output.shape)
+
+  layer = MergeShapeToMatch(8, 8, kernel_size=(1, 1), shift = True, projection_expansion = 1.0)
+  output4 = layer([built["5"], built["4"]])
+  layer = MergeShapeToMatch(8, 8, kernel_size=(1, 1), shift = True, projection_expansion = 1.0)
+  output3 = layer([output4, built["3"]])
+  layer = MergeShapeToMatch(16, 8, kernel_size=(1, 1), shift = True, projection_expansion = 1.0)
+  output4 = layer([output3, output4])
+  layer = MergeShapeToMatch(16, 8, kernel_size=(1, 1), shift = True, projection_expansion = 1.0)
+  output5 = layer([output4, built["5"]])
+  print(output4.shape, output5.shape)

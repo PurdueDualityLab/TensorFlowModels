@@ -560,7 +560,7 @@ def _anchor_free_scale_boxes(encoded_boxes,
   pred_wh = encoded_boxes[..., 2:4]
 
   # build a scaling tensor to get the offset of th ebox relative to the image
-  scaler = tf.convert_to_tensor([height, width, height, width])
+  grid_scaler, scaler = _get_scaler(width, height, grid_points)
 
   # scale the offsets and add them to the grid points or a tensor that is
   # the realtive location of each pixel
