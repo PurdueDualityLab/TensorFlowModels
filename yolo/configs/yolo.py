@@ -225,6 +225,9 @@ def yolo() -> cfg.ExperimentConfig:
   """Yolo general config."""
   return cfg.ExperimentConfig(
       task=YoloTask(),
+      trainer=cfg.TrainerConfig(
+        optimizer_config=optimization.OptimizationConfig()
+        ),
       restrictions=[
           'task.train_data.is_training != None',
           'task.validation_data.is_training != None'
