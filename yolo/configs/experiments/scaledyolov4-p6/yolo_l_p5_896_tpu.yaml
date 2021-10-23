@@ -30,7 +30,7 @@ task:
       max_boxes: 300
       nms_type: iou
       iou_thresh: 0.001
-      nms_thresh: 0.65
+      nms_thresh: 0.60
     loss:
       use_scaled_loss: true
       update_on_repeat: true
@@ -57,25 +57,20 @@ task:
               box: [48,102], box: [119,96], box: [97,189], box: [217,184], 
               box: [171,384], box: [324,451],  box: [616,618], box: [800,800]]
   train_data:
-    input_path: '/readahead/200M/placer/prod/home/tensorflow-performance-data/datasets/coco/train*'
+    input_path: 'gs://cam2-datasets/coco/train*'
     shuffle_buffer_size: 10000
     parser:
       mosaic:
         mosaic_frequency: 1.0
-        mixup_frequency: 0.2
+        mixup_frequency: 0.0
         mosaic_crop_mode: 'scale'
         mosaic_center: 0.0
-        aug_scale_min: 0.2
-        aug_scale_max: 1.8
+        aug_scale_min: 0.5
+        aug_scale_max: 1.5
       max_num_instances: 300
       letter_box: true
       random_flip: true
       aug_rand_translate: 0.5
-      area_thresh: 0.1
+      area_thresh: 0.0
   validation_data:
-    input_path: '/readahead/200M/placer/prod/home/tensorflow-performance-data/datasets/coco/val*'
-  trainer:
-    train_steps: 831600 # epoch 300 to 450 
-    learning_rate:
-      cosine:
-        decay_steps: 831600 # epoch 300 to 450 
+    input_path: 'gs://cam2-datasets/coco/val*'
