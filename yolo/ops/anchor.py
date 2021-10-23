@@ -345,7 +345,7 @@ class YoloAnchorLabeler:
       gt_min = max_reg_targets_per_im >= level_limits[0]
       gt_max = max_reg_targets_per_im <= level_limits[1]
       is_in_level = tf.logical_and(gt_min, gt_max)
-      is_in_boxes = tf.logical_and(is_in_boxes, is_in_level)
+      # is_in_boxes = tf.logical_and(is_in_boxes, is_in_level)
     is_in_boxes_all = tf.reduce_any(is_in_boxes, axis=(0, 1), keepdims=True)
 
     # check if the center is in the receptive feild of the this fpn level
@@ -362,12 +362,15 @@ class YoloAnchorLabeler:
     is_in_boxes_and_center = tf.logical_and(is_in_boxes, is_in_centers)
     is_in_boxes_and_center = tf.logical_and(is_in_index, is_in_boxes_and_center)
 
-    # if self.use_tie_breaker:
-    #   boxes_all = tf.cast(is_in_boxes_and_center, area.dtype) 
-    #   boxes_all = ((boxes_all * area) + ((1 - boxes_all) * INF))
-    #   boxes_min = tf.reduce_min(boxes_all, axis = -1, keepdims = True)
-    #   boxes_min = tf.where(boxes_min == INF, -1.0, boxes_min)
-    #   is_in_boxes_and_center = boxes_all == boxes_min
+    if level_limits is not None:
+      is_in_boxes_and_center = tf.logical_and(is_in_level, is_in_boxes_and_center)
+
+    if self.use_tie_breaker:
+      boxes_all = tf.cast(is_in_boxes_and_center, area.dtype) 
+      boxes_all = ((boxes_all * area) + ((1 - boxes_all) * INF))
+      boxes_min = tf.reduce_min(boxes_all, axis = -1, keepdims = True)
+      boxes_min = tf.where(boxes_min == INF, -1.0, boxes_min)
+      is_in_boxes_and_center = boxes_all == boxes_min
 
     # construct the index update grid
     reps = tf.reduce_sum(tf.cast(is_in_boxes_and_center, tf.int16), axis=-1)
