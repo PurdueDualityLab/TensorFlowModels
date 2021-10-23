@@ -346,6 +346,9 @@ class Parser(parser.Parser):
 
     # Update the labels dictionary.
     if not is_training:
+      output_size = tf.cast([height, width], tf.float32)
+      boxes = bbox_ops.denormalize_boxes(gt_boxes, output_size)
+      gt_area = (boxes[..., 2] - boxes[..., 0]) * (boxes[..., 3] - boxes[..., 1])
 
       # Sets up groundtruth data for evaluation.
       groundtruths = {
@@ -356,7 +359,7 @@ class Parser(parser.Parser):
           'image_info': info,
           'boxes': gt_boxes,
           'classes': gt_classes,
-          'areas': tf.gather(data['groundtruth_area'], inds),
+          'areas': gt_area,
           'is_crowds':
               tf.cast(tf.gather(data['groundtruth_is_crowd'], inds), tf.int32),
       }

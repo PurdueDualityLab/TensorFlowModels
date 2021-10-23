@@ -587,6 +587,6 @@ if __name__ == "__main__":
   for k, s in inputs.items():
     built[k] = tf.ones(inputs[k])
 
-  layer = ShiftedWindowAttention(28, 14, 8, kernel_size=(3, 3), projection_expansion = 2.0)
+  layer = ShiftedWindowAttention(28, 14, 8, kernel_size=(1, 1), projection_expansion = 2.0)
   output, _ = layer(built["5"], built["4"])
   print(output.shape)
