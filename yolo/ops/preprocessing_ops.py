@@ -761,9 +761,11 @@ def boxes_candidates(clipped_boxes,
   Returns:
     indices[:, 0]: A `Tensor` representing valid boxes after filtering.
   """
-
+  if area_thr == 0.0:
+    wh_thr = 0
+    ar_thr = np.inf
   area_thr = tf.math.abs(area_thr)
-
+  
   # Get the scaled and shifted heights of the original
   # unclipped boxes.
   og_height = tf.maximum(box_history[:, 2] - box_history[:, 0], 0.0)

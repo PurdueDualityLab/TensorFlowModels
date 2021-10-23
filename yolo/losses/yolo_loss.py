@@ -610,6 +610,16 @@ class ScaledLoss(YoloLossBase):
 
 class AnchorFreeLoss(ScaledLoss):
   """Temp hold anchor free loss."""
+  def box_loss(self, true_box, pred_box, darknet=False):
+    """Call iou function and use it to compute the loss for the box maps."""
+    if self._loss_type == 'giou':
+      iou, liou = box_ops.compute_giou(true_box, pred_box)
+    elif self._loss_type == 'ciou':
+      iou, liou = box_ops.compute_ciou(true_box, pred_box, darknet=darknet)
+    else:
+      liou = iou = box_ops.compute_iou(true_box, pred_box)
+    loss_box = 1 - tf.square(liou)
+    return iou, liou, loss_box
 
   def _compute_loss(self, true_counts, inds, y_true, boxes, classes, y_pred):
     """Per FPN path loss logic for Yolov4-csp, Yolov4-Large, and Yolov5."""
@@ -664,7 +674,6 @@ class AnchorFreeLoss(ScaledLoss):
 
     # Compute the box loss.
     _, iou, box_loss = self.box_loss(true_box, pred_box, darknet=False)
-    box_loss = tf.square(box_loss)
     box_loss = loss_utils.apply_mask(tf.squeeze(ind_mask, axis=-1), box_loss)
     box_loss = tf.reduce_sum(box_loss)
 

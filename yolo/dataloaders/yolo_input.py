@@ -244,7 +244,7 @@ class Parser(parser.Parser):
     else:
       image = tf.image.resize(
           image, (self._image_h, self._image_w), method='nearest')
-      output_size = tf.cast([640, 640], tf.float32)
+      output_size = tf.cast([self._image_h, self._image_w], tf.float32)
       boxes_ = bbox_ops.denormalize_boxes(boxes, output_size)
       inds = bbox_ops.get_non_empty_box_indices(boxes_)
       boxes = tf.gather(boxes, inds)
