@@ -56,7 +56,7 @@ class SGDTorchConfig(BaseOptimizerConfig):
   momentum: float = 0.9
   warmup_steps: int = 1000
   weight_decay: float = 0.0
-  sim_torch: bool = False
+  sim_torch: bool = True
 
 
 # class LRconfig(base_config.Config):
