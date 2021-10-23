@@ -63,7 +63,7 @@ class SGDTorch(tf.keras.optimizers.Optimizer):
                momentum_start=0.0,
                warmup_steps=1000,
                nesterov=False,
-               sim_torch=False,
+               sim_torch=True,
                name="SGD",
                **kwargs):
     super(SGDTorch, self).__init__(name, **kwargs)
