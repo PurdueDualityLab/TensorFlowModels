@@ -699,9 +699,7 @@ class AnchorFreeLoss(ScaledLoss):
         tf.expand_dims(pred_class, axis = -1),
         label_smoothing=self._label_smoothing,
         from_logits=True)
-    class_loss = tf.reduce_sum(class_loss, axis = -1)
-    class_loss = loss_utils.apply_mask(
-        tf.squeeze(ind_mask, axis=-1), class_loss)
+    class_loss = loss_utils.apply_mask(ind_mask, class_loss)
     class_loss = tf.reduce_sum(class_loss)
 
     # Apply the weights to each loss.
