@@ -618,7 +618,8 @@ class AnchorFreeLoss(ScaledLoss):
       iou, liou = box_ops.compute_ciou(true_box, pred_box, darknet=darknet)
     else:
       liou = iou = box_ops.compute_iou(true_box, pred_box)
-    loss_box = 1 - tf.square(liou)
+    reg = liou - iou
+    loss_box = 1 - (tf.square(iou) + reg)
     return iou, liou, loss_box
 
   def _compute_loss(self, true_counts, inds, y_true, boxes, classes, y_pred):
