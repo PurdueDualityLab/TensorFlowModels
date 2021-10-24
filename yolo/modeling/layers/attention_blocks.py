@@ -17,7 +17,7 @@
 import logging
 from official.vision.beta.ops import spatial_transform_ops
 from typing import List, Tuple
-from yolo.modeling.layers import nn_blocks, attention_fpn_blocks
+# from yolo.modeling.layers import nn_blocks, attention_fpn_blocks
 import tensorflow as tf
 import numpy as np
 from official.modeling import tf_utils
