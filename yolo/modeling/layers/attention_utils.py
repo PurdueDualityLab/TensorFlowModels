@@ -167,64 +167,64 @@ def window_partition_overlaps_br(image, window_size):
   x = tf.reshape(x, [-1, 2 * window_size[0], 2 * window_size[1], C])
   return x, Ph, Pw
 
-### import testing_fns
-import matplotlib.pyplot as plt
-import math
-from skimage import io
-def url_to_image(url):
-  image = io.imread(url)
-  return image
+# ### import testing_fns
+# import matplotlib.pyplot as plt
+# import math
+# from skimage import io
+# def url_to_image(url):
+#   image = io.imread(url)
+#   return image
 
-def draw_patches(patches, batch_size, dim = 0):
-  B, H, W, C = patches.shape
+# def draw_patches(patches, batch_size, dim = 0):
+#   B, H, W, C = patches.shape
 
-  im = B//batch_size
-  bh = bw = int(math.sqrt(im))
+#   im = B//batch_size
+#   bh = bw = int(math.sqrt(im))
   
-  fig, axe = plt.subplots(bh, bw)
+#   fig, axe = plt.subplots(bh, bw)
 
-  k = im * dim
-  for i in range(bh):
-    for j in range(bw):
-      axe[i, j].imshow(patches[k])
-      k += 1 
+#   k = im * dim
+#   for i in range(bh):
+#     for j in range(bw):
+#       axe[i, j].imshow(patches[k])
+#       k += 1 
   
-  fig.set_size_inches(18.5, 6.5, forward=True)
-  plt.show()
-  return 
+#   fig.set_size_inches(18.5, 6.5, forward=True)
+#   plt.show()
+#   return 
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
 
-  window_size = (400//4, 400//4)
-  image = url_to_image("https://interactive-examples.mdn.mozilla.net/media/cc0-images/grapefruit-slice-332-332.jpg")
-  image = tf.image.resize(image, (400, 400), method = "nearest")
-  batches = 16
+#   window_size = (400//4, 400//4)
+#   image = url_to_image("https://interactive-examples.mdn.mozilla.net/media/cc0-images/grapefruit-slice-332-332.jpg")
+#   image = tf.image.resize(image, (400, 400), method = "nearest")
+#   batches = 16
 
-  image = tf.expand_dims(image, axis = 0)
-  image = tf.tile(image, [batches, 1, 1, 1])
-  image, _,_,_,_,_ = pad(image, window_size)
-  image, Ph, Pw = window_partition_overlaps_br(image, window_size)
-  draw_patches(image, batches, 0)
+#   image = tf.expand_dims(image, axis = 0)
+#   image = tf.tile(image, [batches, 1, 1, 1])
+#   image, _,_,_,_,_ = pad(image, window_size)
+#   image, Ph, Pw = window_partition_overlaps_br(image, window_size)
+#   draw_patches(image, batches, 0)
 
-  import time
-  a = time.time()
-  for i in range(100):
-    image_, _,_,_,_,_ = pad(image, window_size)
-    image_, Ph, Pw = window_partition_overlaps_br(image_, window_size)
-    del image_
-  b = time.time()
-  print(b - a)
+#   import time
+#   a = time.time()
+#   for i in range(100):
+#     image_, _,_,_,_,_ = pad(image, window_size)
+#     image_, Ph, Pw = window_partition_overlaps_br(image_, window_size)
+#     del image_
+#   b = time.time()
+#   print(b - a)
 
-  a = time.time()
-  for i in range(100):
-    image_, _,_,_,_,_ = pad(image, window_size)
-    image_, Ph, Pw = window_partition_overlaps_tlbr(image_, window_size)
-  b = time.time()
-  print(b - a)
+#   a = time.time()
+#   for i in range(100):
+#     image_, _,_,_,_,_ = pad(image, window_size)
+#     image_, Ph, Pw = window_partition_overlaps_tlbr(image_, window_size)
+#   b = time.time()
+#   print(b - a)
 
-  a = time.time()
-  for i in range(100):
-    image_, _,_,_,_,_ = pad(image, window_size)
-    image_, Ph, Pw = window_partition(image_, window_size)
-  b = time.time()
-  print(b - a)
+#   a = time.time()
+#   for i in range(100):
+#     image_, _,_,_,_,_ = pad(image, window_size)
+#     image_, Ph, Pw = window_partition(image_, window_size)
+#   b = time.time()
+#   print(b - a)
