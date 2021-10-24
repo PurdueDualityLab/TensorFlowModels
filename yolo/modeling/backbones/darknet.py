@@ -212,6 +212,41 @@ CSPADARKNET53 = {
     ]
 }
 
+CSPMDARKNET53 = {
+    'list_names':
+        LISTNAMES,
+    'splits': {
+        'backbone_split': 100,
+        'neck_split': 135
+    },
+    'backbone': [
+        [
+            'ConvBN', None, 1, False, 32, None, 3, 1, 'same', 'mish', -1, 1, 0,
+            False
+        ],
+        [
+            'DarkRes', 'residual', 1, True, 64, None, None, None, None, 'mish',
+            -1, 1, 1, False
+        ],
+        [
+            'DarkRes', 'csp', 2, False, 128, None, None, None, None, 'mish', -1,
+            1, 2, False
+        ],
+        [
+            'DarkRes', 'csp', 6, False, 256, None, None, None, None, 'mish', -1,
+            1, 3, True
+        ],
+        [
+            'DarkRes', 'csp', 6, False, 512, None, None, None, None, 'mish', -1,
+            2, 4, True
+        ],
+        [
+            'DarkRes', 'csp', 3, False, 1024, None, None, None, None, 'mish',
+            -1, 4, 5, True
+        ],
+    ]
+}
+
 LARGECSP53 = {
     'list_names':
         LISTNAMES,
@@ -368,6 +403,7 @@ BACKBONES = {
     'altered_cspdarknet53': CSPADARKNET53,
     'cspdarknettiny': CSPDARKNETTINY,
     'csp-large': LARGECSP53,
+    'csp-medium': CSPMDARKNET53
 }
 
 

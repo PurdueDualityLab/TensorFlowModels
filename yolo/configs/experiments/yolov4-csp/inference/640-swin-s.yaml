@@ -6,8 +6,8 @@ task:
   smart_bias_lr: 0.0
   model:
     darknet_based_model: False
-    input_size: [640, 640, 3]
-    # input_size: [512, 512, 3]
+    # input_size: [640, 640, 3]
+    input_size: [512, 512, 3]
     # input_size: [608, 608, 3]
     backbone:
       type: 'swin'
@@ -25,7 +25,7 @@ task:
         mlp_ratio: [2, 2, 2, 2]
         alt_shifts: False
         cat_input: False
-        concat: false #True
+        concat: False #True
         ignore_shifts: [True, True, False, False]
     decoder:
       type: yolo_decoder

@@ -205,7 +205,7 @@ class WindowedAttention(tf.keras.layers.Layer):
                groups = 1, 
                strides = 1, 
                use_separable_conv = True, 
-               use_bn=True,
+               use_bn=False,
                use_sync_bn=False,
                norm_momentum=0.99,
                norm_epsilon=0.001,
@@ -265,7 +265,6 @@ class WindowedAttention(tf.keras.layers.Layer):
 
   def build(self, input_shape):
     self.dims = input_shape[-1]
-    print(input_shape)
 
     self.attention = SpatialAttention(
       self._num_heads, 
@@ -738,6 +737,7 @@ class MergeShapeToMatch(tf.keras.layers.Layer):
                shift = False, 
                kernel_size = 1,
                post_kernel_size = None,
+               expansion_kernel_size = 3, 
                groups = 1, 
                strides = 1, 
                use_separable_conv = False, 
@@ -750,8 +750,8 @@ class MergeShapeToMatch(tf.keras.layers.Layer):
                qk_scale = None, 
                drop_path = 0.0,
                attention_dropout = 0.0, 
-               attention_activation = 'softmax', # typically jsut soft max, more for future developments of something better 
-               expansion_activation = None, 
+               attention_activation = "softmax", # typically jsut soft max, more for future developments of something better 
+               expansion_activation = "mish", 
                project_attention = True, 
                projection_dropout = 0.0, 
                projection_expansion = 1.0,
@@ -796,6 +796,7 @@ class MergeShapeToMatch(tf.keras.layers.Layer):
     self._projection_use_bn = projection_use_bn
 
     self._expansion_activation = expansion_activation
+    self._expansion_kernel_size = expansion_kernel_size
     # dropout
     self._attention_activation = attention_activation
     self._attention_dropout = attention_dropout
@@ -823,10 +824,15 @@ class MergeShapeToMatch(tf.keras.layers.Layer):
     if max(self._sample_size) == min(self._sample_size) and self._sample_size[0] > 1:
       self._upsample = True 
       self._sample_size = (int(self._sample_size[0]), int(self._sample_size[1]))
+      self._query_window_size = (int(self._window_size[0] * self._sample_size[0]),
+                                int(self._window_size[1] * self._sample_size[0]))
     elif max(self._sample_size) == min(self._sample_size) and self._sample_size[0] < 1:
       self._upsample = False
       self._sample_size = (int(source_shape[1]/query_shape[1]), 
                            int(source_shape[2]/query_shape[2]))
+      self._query_window_size = (int(self._window_size[0] * self._sample_size[0]),
+                                int(self._window_size[1] * self._sample_size[0]))
+      self._query_window_size, self._window_size = self._window_size, self._query_window_size
     else:
       self._upsample = None
 
@@ -891,7 +897,7 @@ class MergeShapeToMatch(tf.keras.layers.Layer):
 
     self._ffn = FFN(
       hidden_features=int(self.dims * self._mlp_ratio), 
-      kernel_size = 1, 
+      kernel_size = self._expansion_kernel_size, 
       strides = 1, 
       activation = self._expansion_activation, 
       groups = self._groups, 
@@ -934,8 +940,7 @@ class MergeShapeToMatch(tf.keras.layers.Layer):
     if self._channel_match:
       source = self.channel_match(source)
 
-    x = x + source
-    return source + self._ffn(x)
+    return source + self._ffn(x + source)
 
 # once patched channel tokens are established and preserved so K > 1 is ok
 
@@ -950,11 +955,11 @@ class FFN(tf.keras.layers.Layer):
   def __init__(self, 
                hidden_features = None, 
                out_features = None, 
-               kernel_size = (1, 1),
-               strides = (1, 1), 
+               kernel_size = 1,
+               strides = 1, 
+               invert = None,
                activation = "mish", 
                groups = 1, 
-               use_separable_conv = False, 
                use_bn=True,
                use_sync_bn=False,
                norm_momentum=0.99,
@@ -962,6 +967,7 @@ class FFN(tf.keras.layers.Layer):
                dilation_rate = 1, 
                leaky_alpha=0.1,
                cat_input = True,
+               use_separable_conv = False, 
                kernel_initializer='TruncatedNormal',
                kernel_regularizer=None,
                bias_initializer='zeros',
@@ -970,14 +976,15 @@ class FFN(tf.keras.layers.Layer):
     super().__init__(**kwargs)
 
     # features 
+    self._invert = invert or kernel_size < 0
     self._hidden_features = hidden_features
     self._out_features = out_features
     self._cat_input = cat_input
+    self._kernel_size = abs(kernel_size)
+    self._strides = strides
 
     # init and regularizer
     self._init_args = dict(
-      kernel_size = kernel_size,
-      strides = strides,
       activation = activation,
       groups = groups,
       use_separable_conv = use_separable_conv,
@@ -995,10 +1002,25 @@ class FFN(tf.keras.layers.Layer):
   def build(self, input_shape):
     hidden_features = self._hidden_features or input_shape[-1]
     out_features = self._out_features or input_shape[-1]
-    self.fc_expand = nn_blocks.ConvBN(filters = hidden_features,
-                                      **self._init_args)
 
+    if self._invert:
+      ks1 = 1 
+      s1 = 1
+      ks2 = self._kernel_size
+      s2 = self._strides
+    else:
+      ks1 = self._kernel_size
+      s1 = self._strides
+      ks2 = 1 
+      s2 = 1
+
+    self.fc_expand = nn_blocks.ConvBN(filters = hidden_features, 
+                                      kernel_size = ks1,
+                                      strides = s1, 
+                                      **self._init_args)
     self.fc_compress = nn_blocks.ConvBN(filters = out_features, 
+                                        kernel_size = ks2,
+                                        strides = s2, 
                                         **self._init_args)
     return 
 
@@ -1008,26 +1030,391 @@ class FFN(tf.keras.layers.Layer):
     return x
 
 
+class SPP(tf.keras.layers.Layer):
+  """Spatial Pyramid Pooling.
+
+  A non-agregated SPP layer that uses Pooling.
+  """
+
+  def __init__(self, sizes, weighted, strides = (1, 1), **kwargs):
+    self._sizes = list(reversed(sizes))
+    if not sizes:
+      raise ValueError('More than one maxpool should be specified in SSP block')
+    self._strides = strides
+    self._weighted = weighted
+    super().__init__(**kwargs)
+
+  def weighted(self, size):
+    return tf.keras.layers.DepthwiseConv2D(
+                              (size, size), # spatial embedding combination and reduction
+                              strides = self._strides, 
+                              padding = "same", 
+                              use_bias = False)
+
+  def unweighted(self, size):
+    return tf.keras.layers.MaxPool2D(
+              pool_size=(size, size),
+              strides=self._strides,
+              padding='same',
+              data_format=None)
+
+  def build(self, input_shape):
+    maxpools = []
+    for size, weighted in zip(self._sizes, self._weighted):
+      if weighted:
+        maxpools.append(self.weighted(size))
+      else:
+        maxpools.append(self.unweighted(size))
+    self._maxpools = maxpools
+    super().build(input_shape)
+
+  def call(self, inputs, training=None):
+    outputs = []
+    for maxpool in self._maxpools:
+      outputs.append(maxpool(inputs))
+    outputs.append(inputs)
+    concat_output = tf.keras.layers.concatenate(outputs)
+    return concat_output
+
+  def get_config(self):
+    layer_config = {'sizes': self._sizes}
+    layer_config.update(super().get_config())
+    return layer_config
+
+class TBiFPN(tf.keras.Model):
+
+  def __init__(self, 
+               input_specs, 
+
+               use_patch_expansion = True, 
+
+               # catch
+               include_catch = True,
+               catch_transformer = True, 
+               spp_keys = [3, 5, 7], 
+               weighted = [False, False, False],
+               catch_projection_expansion = 1.0, 
+              
+               repititions = 1, 
+               fpn_only = False, 
+               include_detokenization = True, 
+
+               # conv
+               kernel_size = 1,
+               groups = 1, 
+               strides = 1, 
+               use_bn=True,
+               
+               # conv
+               use_separable_conv = True, 
+               use_sync_bn=False,
+               norm_momentum=0.99,
+               norm_epsilon=0.001,
+               dilation_rate = 1, 
+               conv_activation = "mish",
+               
+               # transformer
+               transformers_kernel_size = 1, 
+               transformers_projection_kernel_size = 1, 
+               window_size = 16, 
+               token_size = 32, 
+               mlp_ratio = 1, 
+               shift = False, 
+               post_kernel_size = None,
+               qkv_bias = True, 
+               qk_scale = None, 
+               drop_path = 0.0,
+               attention_dropout = 0.0,                
+               attention_activation = 'softmax', # typically jsut soft max, more for future developments of something better 
+               projection_activation = None, 
+               project_attention = True, 
+               projection_dropout = 0.0, 
+               projection_expansion = 1.0,
+               projection_use_bias = False, 
+               projection_use_bn = False, 
+               expansion_kernel_size = 1, 
+               
+               # shared
+               kernel_initializer='TruncatedNormal',
+               kernel_regularizer=None,
+               bias_initializer='zeros',
+               bias_regularizer=None, 
+               **kwargs) -> None:
+
+    self._kernel_size = kernel_size
+    self._strides = strides
+    self._groups = groups
+
+    self._window_size = window_size
+    self._token_size = token_size
+    self._norm_epsilon = norm_epsilon
+    self._use_bn = use_bn
+    self._activation = conv_activation
+
+    self._include_catch = include_catch
+    self._catch_transformer = catch_transformer
+    self._spp_keys = spp_keys
+    self._weighted = weighted
+    self._catch_projection_expansion = catch_projection_expansion
+    self._use_patch_expansion = use_patch_expansion
+
+    self._repititions = repititions
+    self._expansion_kernel_size = expansion_kernel_size
+
+    self._init_args = dict(
+      kernel_initializer = _get_initializer(kernel_initializer),
+      bias_initializer = bias_initializer,
+      kernel_regularizer = kernel_regularizer,
+      bias_regularizer = bias_regularizer
+    )
+
+    self._conv_init_args = dict(
+      groups = self._groups,
+      use_separable_conv = use_separable_conv,
+      use_sync_bn = use_sync_bn,
+      norm_momentum = norm_momentum,
+      norm_epsilon = norm_epsilon,
+      dilation_rate = dilation_rate)
+
+    self._transformers_kernel_size = transformers_kernel_size
+    self._transformers_projection_kernel_size = transformers_projection_kernel_size
+    self._transformer_init_args = dict(
+      mlp_ratio = mlp_ratio, 
+      shift = shift, 
+      post_kernel_size = post_kernel_size,
+      qkv_bias = qkv_bias, 
+      qk_scale = qk_scale, 
+      drop_path = drop_path,
+      attention_dropout = attention_dropout, 
+      attention_activation = attention_activation, 
+      expansion_activation = self._activation, # ffn activation
+      projection_activation = projection_activation,
+      project_attention = project_attention, 
+      projection_expansion = projection_expansion,
+      projection_dropout = projection_dropout, 
+      projection_use_bias = projection_use_bias, 
+      use_bn = projection_use_bn)
+
+    inputs = {
+        key: tf.keras.layers.Input(shape=value[1:]) for key, value in input_specs.items()
+    }
+    if self._include_catch:
+      outputs = self.build_catch(inputs)
+    else:
+      outputs = inputs
+
+    for i in range(self._repititions):
+      fpn_only_ = False
+      if i == self._repititions - 1:
+        fpn_only_ = fpn_only
+      outputs = self.build_merging(outputs, fpn_only_)
 
 
+    if include_detokenization:
+      outputs = self.build_output(outputs)
+
+    self._output_specs = {key: value.shape for key, value in outputs.items()}
+    super().__init__(inputs=inputs, outputs=outputs, name='YoloDecoder')
+    return
+
+  def layer_norm(self, x):
+    _, H, W, C = x.shape
+    x = tf.reshape(x, [-1, H * W, C])
+    x = _get_norm_fn("layer_norm", epsilon=self._norm_epsilon)(axis = -1)(x) 
+    x = tf.reshape(x, [-1, H , W, C])
+    return x
+  
+  def activation(self, x):
+    return _get_activation_fn(self._activation)(x)
+
+  def catch(self, x):
+    init_args = self._init_args.copy()
+    conv_args = self._conv_init_args.copy()
+    transformer_args = self._transformer_init_args.copy()
+
+    filters = x.shape[-1]
+    point_wise_compress = nn_blocks.ConvBN(filters = filters//2, 
+                                           kernel_size = 1, 
+                                           strides = 1, 
+                                           use_bn = self._use_bn,
+                                           activation = self._activation,
+                                           **conv_args, 
+                                           **init_args)
+    spatial_binning = SPP(self._spp_keys, self._weighted)
+    point_wise_merge_bins = nn_blocks.ConvBN(filters = filters//2, 
+                                           kernel_size = 1, 
+                                           strides = 1, 
+                                           use_bn = self._use_bn,
+                                           activation = self._activation,
+                                           **conv_args, 
+                                           **init_args)
+    point_wise_merge = nn_blocks.ConvBN(filters = filters, # maybe make a 3x3
+                                          kernel_size = 1, 
+                                          strides = 1, 
+                                          use_bn = self._use_bn,
+                                          activation = self._activation,
+                                          **conv_args, 
+                                          **init_args)
+
+
+    x = point_wise_compress(x)
+    x_bins = spatial_binning(x)
+    x_bins = point_wise_merge_bins(x_bins)
+    x = point_wise_merge(self.activation(x + x_bins))
+
+    if self._catch_transformer:
+      transformer_args["projection_expansion"] = self._catch_projection_expansion
+      transformer_args["projection_activation"] = self._activation
+      transformer_args["post_kernel_size"] = self._transformers_projection_kernel_size
+      del transformer_args["mlp_ratio"], transformer_args["expansion_activation"]
+
+      num_heads = x.shape[-1]//self._token_size
+
+      if self._use_patch_expansion:
+        attention = ExpandedWindowSelfAttention(
+              window_size = self._window_size, 
+              num_heads = num_heads, 
+              tlbr=True,
+              kernel_size=self._transformers_kernel_size, 
+              **conv_args, 
+              **transformer_args, 
+              **init_args
+          )
+      else:
+        attention = ShiftedWindowSelfAttention(
+              window_size = self._window_size, 
+              num_heads = num_heads, 
+              kernel_size=self._transformers_kernel_size, 
+              **conv_args, 
+              **transformer_args, 
+              **init_args
+          )
+
+      forward = nn_blocks.ConvBN(filters = filters, 
+                                  kernel_size = 1, 
+                                  strides = 1, 
+                                  use_bn = self._use_bn,
+                                  activation = self._activation,
+                                  **conv_args, 
+                                  **init_args)
+      x += attention(self.layer_norm(x))
+      x = forward(x)
+    return x
+
+  def build_catch(self, inputs): # 17,254,328 params
+    outputs = {}
+    for k, v in inputs.items():
+      outputs[k] = self.catch(v)
+    return outputs
+
+  def merge_levels(self, source, query):
+    init_args = self._init_args.copy()
+    conv_args = self._conv_init_args.copy()
+    transformer_args = self._transformer_init_args.copy()
+
+    project_use_bn = transformer_args["use_bn"]
+    del transformer_args["use_bn"]
+    transformer_args["projection_use_bn"] = project_use_bn
+
+    num_heads = query.shape[-1]//self._token_size
+    merge_shapes = MergeShapeToMatch(
+      window_size=self._window_size, 
+      num_heads=num_heads, 
+      expansion_kernel_size = self._expansion_kernel_size,
+      **conv_args, 
+      **transformer_args,
+      **init_args
+    )
+    return merge_shapes([source, query])
+  
+  def build_merging(self, inputs, fpn_only):
+    outputs = inputs
+    min_level = int(min(outputs.keys()))
+    max_level = int(max(outputs.keys()))
+
+    #up_merge
+    for i in reversed(range(min_level, max_level)):
+      outputs[str(i)] = self.merge_levels(outputs[str(i + 1)], outputs[str(i)])
+
+    # down_merge
+    if not fpn_only:
+      for i in range(min_level, max_level):
+        outputs[str(i + 1)] = self.merge_levels(outputs[str(i)], outputs[str(i + 1)])
+    return outputs
+
+  def output_node(self, x):
+    init_args = self._init_args.copy()
+    conv_args = self._conv_init_args.copy()
+
+    filters = x.shape[-1]
+
+    # # detokenization
+    # conv_args["groups"] = filters//self._token_size
+    # spatial_reasoning = nn_blocks.ConvBN(filters = filters, # maybe make a 3x3
+    #                                       kernel_size = 3, 
+    #                                       strides = 1, 
+    #                                       use_bn = self._use_bn,
+    #                                       activation = self._activation,
+    #                                       **conv_args, 
+    #                                       **init_args)
+    
+    # conv_args["groups"] = self._groups
+    point_wise_compress = nn_blocks.ConvBN(filters = filters//2, 
+                                           kernel_size = 1, 
+                                           strides = 1, 
+                                           use_bn = self._use_bn,
+                                           activation = self._activation,
+                                           **conv_args, 
+                                           **init_args)
+
+    spatial_re_expantion = nn_blocks.ConvBN(filters = filters, 
+                                            kernel_size = 3, 
+                                            strides = 1, 
+                                            use_bn = self._use_bn,
+                                            activation = self._activation,
+                                            **conv_args, 
+                                            **init_args)
+    
+    # x = spatial_reasoning(x)
+    x = point_wise_compress(x)
+    x = spatial_re_expantion(x)
+    return x
+
+  def build_output(self, inputs): # 17,254,328 params
+    outputs = {}
+    for k, v in inputs.items():
+      outputs[k] = self.output_node(v)
+    return outputs
+
+  @property
+  def output_specs(self):
+    return self._output_specs
+
+  def get_config(self):
+    config = dict(
+        input_specs=self._input_specs,
+        use_fpn=self._use_fpn,
+        fpn_depth=self._fpn_depth,
+        **self._decoder_config)
+    return config
+
+  @classmethod
+  def from_config(cls, config, custom_objects=None):
+    return cls(**config)
+      
 
 if __name__ == "__main__":
   inputs = {"3": [2, 80, 80, 256], "4": [2, 40, 40, 512], "5": [2, 20, 20, 1024]}
+
+  m = TBiFPN(inputs, 
+                  repititions=1, 
+                  fpn_only=False, 
+                  include_catch=True, 
+                  include_detokenization=True)
+  m.summary()
 
   built = {}
   for k, s in inputs.items():
     built[k] = tf.ones(inputs[k])
 
-  layer = ExpandedWindowSelfAttention(20, 8, kernel_size=(1, 1), projection_expansion = 1.0)
-  output = layer(built["5"])
-  print(output.shape)
-
-  # layer = MergeShapeToMatch(8, 8, kernel_size=(1, 1), shift = True, projection_expansion = 1.0)
-  # output4 = layer([built["5"], built["4"]])
-  # layer = MergeShapeToMatch(8, 8, kernel_size=(1, 1), shift = True, projection_expansion = 1.0)
-  # output3 = layer([output4, built["3"]])
-  # layer = MergeShapeToMatch(16, 8, kernel_size=(1, 1), shift = True, projection_expansion = 1.0)
-  # output4 = layer([output3, output4])
-  # layer = MergeShapeToMatch(16, 8, kernel_size=(1, 1), shift = True, projection_expansion = 1.0)
-  # output5 = layer([output4, built["5"]])
-  # print(output4.shape, output5.shape)
+  m(built)

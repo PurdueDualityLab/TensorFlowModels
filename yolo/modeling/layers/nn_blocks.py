@@ -209,6 +209,8 @@ class ConvBN(tf.keras.layers.Layer):
     return x
 
   def fuse(self):
+    if self._use_depthwise_conv:
+      return
     if hasattr(self, "bn") and self.bn is not None: # and not self._use_separable_conv:
       if self._use_bias is None:
         use_bias = not self._use_bn
@@ -236,13 +238,12 @@ class ConvBN(tf.keras.layers.Layer):
       base = tf.sqrt(self._norm_epsilon + moving_variance)
 
       self.conv.use_bias = True 
-      infilters = conv_weights.shape[-2]
+      infilters = conv_weights.shape[-2] * self._groups
       self.conv.build([None, None, None, infilters])
 
       if not self._use_depthwise_conv:
         w_conv_base = tf.transpose(conv_weights, perm = (3, 2, 0, 1))
         w_conv = tf.reshape(w_conv_base, [conv_weights.shape[-1], -1])
-        
         w_bn = tf.linalg.diag(gamma/base)
         w_conv = tf.reshape(tf.matmul(w_bn, w_conv), w_conv_base.get_shape())
         w_conv = tf.transpose(w_conv, perm = (2, 3, 1, 0))

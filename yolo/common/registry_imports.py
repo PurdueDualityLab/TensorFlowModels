@@ -21,6 +21,7 @@ import yolo
 from yolo.modeling.backbones import darknet
 from yolo.modeling.backbones import swin
 from yolo.modeling.decoders import yolo_decoder
+from yolo.modeling.decoders import transformer_bifpn
 # from yolo.modeling import factory
 
 from yolo.configs import darknet_classification

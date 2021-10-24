@@ -28,6 +28,27 @@ class YoloDecoder(hyperparams.Config):
   activation: Optional[str] = 'same'
 
 @dataclasses.dataclass
+class TBiFPN(hyperparams.Config):
+  """Builds Yolo decoder.
+
+  If the name is specified, or version is specified we ignore input parameters
+  and use version and name defaults.
+  """
+  fpn_only: bool = False
+  repititions: int = 1
+  include_detokenization: bool = True 
+  use_separable_conv: bool = True
+  window_size: int = 8
+  token_size: int  = 32
+  mlp_ratio: int  = 2
+  kernel_size: int = 1
+  activation: Optional[str] = 'mish'
+  use_patch_expansion: bool = False
+  shift: bool = False
+  expansion_kernel_size: bool = 1
+
+@dataclasses.dataclass
 class Decoder(decoders.Decoder):
   type: Optional[str] = 'yolo_decoder'
   yolo_decoder: YoloDecoder = YoloDecoder()
+  tbifpn_decoder: TBiFPN = TBiFPN()
