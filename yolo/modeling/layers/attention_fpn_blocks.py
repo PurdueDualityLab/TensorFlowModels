@@ -18,14 +18,12 @@ import logging
 from official.vision.beta.ops import spatial_transform_ops
 from typing import List, Tuple
 from yolo.modeling.layers import nn_blocks, attention_blocks
+from yolo.modeling.layers.attention_utils import *
 import tensorflow as tf
 import numpy as np
 from official.modeling import tf_utils
 from official.vision.beta.modeling.layers import nn_layers
 from functools import partial
-
-USE_SYNC_BN = True
-SHIFT = True
 
 def _get_activation_fn(activation, leaky_alpha = 0.1):
   if activation == 'leaky':
@@ -62,99 +60,6 @@ def _get_initializer(initializer):
   if initializer == 'TruncatedNormal':
     initializer = tf.keras.initializers.TruncatedNormal(mean=0.0, stddev=0.02)
   return initializer
-
-def window_partition(x, window_size):
-  """
-  Args:
-    x: (B, H, W, C)
-    window_size (int): window size
-
-  Returns:
-    windows: (num_windows*B, window_size, window_size, C)
-  """
-  _, H, W, C = x.shape
-  if isinstance(window_size, int):
-    window_size = (window_size, window_size)
-  x = tf.reshape(x, [-1, H // window_size[0], window_size[0], W // window_size[1], window_size[1], C])
-  x = tf.transpose(x, perm=(0, 1, 3, 2, 4, 5))
-  x = tf.reshape(x, [-1, window_size[0], window_size[1], C])
-  return x
-
-def window_reverse(x, window_size, H, W):
-  """
-  Args:
-    windows: (num_windows*B, window_size, window_size, C)
-    window_size (int): Window size
-    H (int): Height of image
-    W (int): Width of image
-
-  Returns:
-    x: (B, H, W, C)
-  """
-  _, _, _, C = x.shape
-  if isinstance(window_size, int):
-    window_size = (window_size, window_size)
-  x = tf.reshape(x, [-1, H // window_size[0], W // window_size[1], window_size[0], window_size[1], C])
-  x = tf.transpose(x, perm=(0, 1, 3, 2, 4, 5))
-  x = tf.reshape(x, [-1, H, W, C])
-  return x
-
-def pad(x, window_size):
-  _, H, W, C = x.shape
-  pad_l = pad_t = 0 
-  pad_r = (window_size[1] - W % window_size[1]) % window_size[1]
-  pad_b = (window_size[0] - H % window_size[0]) % window_size[0]  
-  x = tf.pad(x, [[0,0], [pad_t, pad_b], [pad_l, pad_r], [0, 0]]) 
-  _, Hp, Wp, _ = x.shape
-  return x, H, W, C, Hp, Wp
-
-def pad_and_shift_input(x, window_size, shift_size, shift):
-  x, H, W, C, Hp, Wp = pad(x, window_size)  
-
-  if shift  == True:
-    shifts = [(0, 0), (shift_size[0], shift_size[1])] # 6 ms latency, 9 ms latency 
-  elif shift is None:
-    shifts = [(shift_size[0], shift_size[1])]
-  else:
-    shifts = [(0, 0)] # 6 ms latency
-
-  windows = []
-  bsize = []
-  for shift in shifts:
-    # cyclic shift 
-    if shift[0] != 0 or shift[1] != 0:
-      shifted_x = x[:, (shift[0]):(Hp - (window_size[0] - shift[0])), (shift[1]):(Wp - (window_size[1] - shift[1])), :]
-      attn_mask = None
-    else:
-      shifted_x = x
-      attn_mask = None 
-
-    x_windows = window_partition(shifted_x, window_size) # nW*B, window_size, window_size, C
-    windows.append(x_windows)
-
-    nwin = tf.shape(x_windows)
-    bsize.append(nwin[0])
-  x_windows = tf.concat(windows, axis = 0)
-  return x, x_windows, shifts, bsize, H, W, C, Hp, Wp
-
-def upad_and_unshift(attn_windows, split_sizes, Hp, Wp, window_size, shifts, H, W):
-  x_output = None
-  windows = tf.split(attn_windows, split_sizes, axis = 0)
-  for shift, attn_windows in zip(shifts, windows):
-    if shift[0] != 0 or shift[1] != 0:
-      shifted_x = window_reverse(attn_windows, window_size, (Hp - window_size[0]), (Wp - window_size[1])) # B H' W' C
-      shifted_x = tf.pad(shifted_x, [[0,0], [shift[0], window_size[0] - shift[0]], [shift[1], window_size[1] - shift[1]], [0, 0]]) 
-    else:
-      shifted_x = window_reverse(attn_windows, window_size, Hp, Wp) # B H' W' C
-
-    if x_output is None:
-      x_output = shifted_x
-    else:
-      x_output = x_output + shifted_x
-
-  if Hp != H or Wp != W:
-    x_output = x_output[:, :H, :W, :]
-  return x_output
 
 class Identity(tf.keras.layers.Layer):
 

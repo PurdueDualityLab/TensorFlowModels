@@ -490,14 +490,14 @@ def resize_and_jitter_image(image,
     ])
     infos.append(pad_info)
 
-    # temp = tf.shape(image_)[:2]
-    # cond = temp > tf.cast(desired_size, temp.dtype)
-    # if tf.reduce_any(cond):
-    #   size = tf.cast(desired_size, temp.dtype)
-    #   size = tf.where(cond, size, temp)
-    #   image_ = tf.image.resize(
-    #       image_, (size[0], size[1]), method=tf.image.ResizeMethod.AREA)
-    #   image_ = tf.cast(image_, original_dtype)
+    temp = tf.shape(image_)[:2]
+    cond = temp > tf.cast(desired_size, temp.dtype)
+    if tf.reduce_any(cond):
+      size = tf.cast(desired_size, temp.dtype)
+      size = tf.where(cond, size, temp)
+      image_ = tf.image.resize(
+          image_, (size[0], size[1]), method=tf.image.ResizeMethod.AREA)
+      image_ = tf.cast(image_, original_dtype)
 
     image_ = tf.image.resize(
         image_, (desired_size[0], desired_size[1]),

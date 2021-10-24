@@ -292,6 +292,8 @@ class Parser(parser.Parser):
         augment=False, 
         output_size = [self._image_h, self._image_w])
     classes = tf.gather(classes, inds)
+
+    tf.print(infos)
     info = infos[-1]
 
     image, labels = self._build_label(
@@ -350,7 +352,7 @@ class Parser(parser.Parser):
       # boxes = bbox_ops.denormalize_boxes(gt_boxes, output_size)
       # gt_area = (boxes[..., 2] - boxes[..., 0]) * (boxes[..., 3] - boxes[..., 1])
 
-      gt_area = data['groundtruth_areas']
+      gt_area = data['groundtruth_area']
 
       # Sets up groundtruth data for evaluation.
       groundtruths = {
