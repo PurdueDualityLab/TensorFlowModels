@@ -17,7 +17,7 @@
 import logging
 from official.vision.beta.ops import spatial_transform_ops
 from typing import List, Tuple
-# from yolo.modeling.layers import nn_blocks, attention_fpn_blocks
+from yolo.modeling.layers import nn_blocks, attention_fpn_blocks
 import tensorflow as tf
 import numpy as np
 from official.modeling import tf_utils
@@ -514,6 +514,8 @@ class ShiftedWindowMultiHeadAttention(tf.keras.layers.Layer):
 
     self._attention_layer = attention_fpn_blocks.ExpandedWindowSelfAttention(
         window_size=self._window_size, 
+        kernel_size=3,
+        tlbr=False,
         num_heads=self._num_heads, 
         qkv_bias=self._qkv_bias, 
         qk_scale=self._qk_scale, 
@@ -524,6 +526,31 @@ class ShiftedWindowMultiHeadAttention(tf.keras.layers.Layer):
         attention_activation=self._attention_activation, 
         **self._init_args
     )
+    # self._attention_layer = attention_fpn_blocks.ShiftedWindowSelfAttention(
+    #     window_size=self._window_size, 
+    #     num_heads=self._num_heads, 
+    #     qkv_bias=self._qkv_bias, 
+    #     qk_scale=self._qk_scale, 
+    #     project_attention=True, 
+    #     attention_dropout=self._attention_dropout, 
+    #     projection_dropout=self._projection_dropout, 
+    #     relative_bias_initializer=self._relative_bias_initializer, 
+    #     attention_activation=self._attention_activation, 
+    #     **self._init_args
+    # )
+
+    # self._attention_layer2 = attention_fpn_blocks.ShiftedWindowSelfAttention(
+    #     window_size=self._window_size, 
+    #     num_heads=self._num_heads, 
+    #     qkv_bias=self._qkv_bias, 
+    #     qk_scale=self._qk_scale, 
+    #     project_attention=True, 
+    #     attention_dropout=self._attention_dropout, 
+    #     projection_dropout=self._projection_dropout, 
+    #     relative_bias_initializer=self._relative_bias_initializer, 
+    #     attention_activation=self._attention_activation, 
+    #     **self._init_args
+    # )
 
     return 
 
@@ -539,60 +566,62 @@ class ShiftedWindowMultiHeadAttention(tf.keras.layers.Layer):
         x = tf.reshape(x, [-1, H, W, C])
       else:
         x = self.pre_norm(x)
-
-    # _, H, W, C = x.shape
-    # pad_l = pad_t = 0 
-    # pad_r = (self._window_size[1] - W % self._window_size[1]) % self._window_size[1]
-    # pad_b = (self._window_size[0] - H % self._window_size[0]) % self._window_size[0]  
-    # x = tf.pad(x, [[0,0], [pad_t, pad_b], [pad_l, pad_r], [0, 0]]) 
-    # _, Hp, Wp, _ = x.shape
-
-    # if self._shift  == True:
-    #   shifts = [(0, 0), (self._shift_size, self._shift_size)] # 6 ms latency, 9 ms latency 
-    # elif self._shift is None:
-    #   shifts = [(self._shift_size, self._shift_size)]
-    # else:
-    #   shifts = [(0, 0)] # 6 ms latency
-
-    # x_output = None
-    # windows = []
-    # bsize = []
-    # for shift in shifts:
-    #   # cyclic shift 
-    #   if shift[0] != 0 or shift[1] != 0:
-    #     shifted_x = x[:, (shift[0]):(Hp - (self._window_size[0] - shift[0])), (shift[1]):(Wp - (self._window_size[1] - shift[1])), :]
-    #     attn_mask = None
-    #   else:
-    #     shifted_x = x
-    #     attn_mask = None 
-
-    #   x_windows = window_partition(shifted_x, self._window_size) # nW*B, window_size, window_size, C
-    #   windows.append(x_windows)
-
-    #   nwin = tf.shape(x_windows)
-    #   bsize.append(nwin[0])
-
-    # x_windows = tf.concat(windows, axis = 0)
-    # x_windows = tf.reshape(x_windows, [-1, self._window_size[0] * self._window_size[1], C]) # nW*B, window_size*window_size, C
-    # attn_windows = self._attention_layer(x_windows, mask=attn_mask, training=training)
-    # attn_windows = tf.reshape(attn_windows, [-1, self._window_size[0], self._window_size[1], C]) # nW*B, window_size*window_size, C
-    # windows = tf.split(attn_windows, bsize, axis = 0)
-
-    # for shift, attn_windows in zip(shifts, windows):
-    #   if shift[0] != 0 or shift[1] != 0:
-    #     shifted_x = window_reverse(attn_windows, self._window_size, (Hp - self._window_size[0]), (Wp - self._window_size[1])) # B H' W' C
-    #     shifted_x = tf.pad(shifted_x, [[0,0], [shift[0], self._window_size[0] - shift[0]], [shift[1], self._window_size[1] - shift[1]], [0, 0]]) 
-    #   else:
-    #     shifted_x = window_reverse(attn_windows, self._window_size, Hp, Wp) # B H' W' C
-
-    #   if x_output is None:
-    #     x_output = shifted_x
-    #   else:
-    #     x_output = x_output + shifted_x
     
-    # if pad_r > 0 or pad_b > 0:
-    #   x_output = x_output[:, :H, :W, :]
+    _, H, W, C = x.shape
+    # if H > 80:
+    #   x_output = self._attention_layer1(x, mask=mask, training=training)
+    # # pad_l = pad_t = 0 
+    # # pad_r = (self._window_size[1] - W % self._window_size[1]) % self._window_size[1]
+    # # pad_b = (self._window_size[0] - H % self._window_size[0]) % self._window_size[0]  
+    # # x = tf.pad(x, [[0,0], [pad_t, pad_b], [pad_l, pad_r], [0, 0]]) 
+    # # _, Hp, Wp, _ = x.shape
 
+    # # if self._shift  == True:
+    # #   shifts = [(0, 0), (self._shift_size, self._shift_size)] # 6 ms latency, 9 ms latency 
+    # # elif self._shift is None:
+    # #   shifts = [(self._shift_size, self._shift_size)]
+    # # else:
+    # #   shifts = [(0, 0)] # 6 ms latency
+
+    # # x_output = None
+    # # windows = []
+    # # bsize = []
+    # # for shift in shifts:
+    # #   # cyclic shift 
+    # #   if shift[0] != 0 or shift[1] != 0:
+    # #     shifted_x = x[:, (shift[0]):(Hp - (self._window_size[0] - shift[0])), (shift[1]):(Wp - (self._window_size[1] - shift[1])), :]
+    # #     attn_mask = None
+    # #   else:
+    # #     shifted_x = x
+    # #     attn_mask = None 
+
+    # #   x_windows = window_partition(shifted_x, self._window_size) # nW*B, window_size, window_size, C
+    # #   windows.append(x_windows)
+
+    # #   nwin = tf.shape(x_windows)
+    # #   bsize.append(nwin[0])
+
+    # # x_windows = tf.concat(windows, axis = 0)
+    # # x_windows = tf.reshape(x_windows, [-1, self._window_size[0] * self._window_size[1], C]) # nW*B, window_size*window_size, C
+    # # attn_windows = self._attention_layer(x_windows, mask=attn_mask, training=training)
+    # # attn_windows = tf.reshape(attn_windows, [-1, self._window_size[0], self._window_size[1], C]) # nW*B, window_size*window_size, C
+    # # windows = tf.split(attn_windows, bsize, axis = 0)
+
+    # # for shift, attn_windows in zip(shifts, windows):
+    # #   if shift[0] != 0 or shift[1] != 0:
+    # #     shifted_x = window_reverse(attn_windows, self._window_size, (Hp - self._window_size[0]), (Wp - self._window_size[1])) # B H' W' C
+    # #     shifted_x = tf.pad(shifted_x, [[0,0], [shift[0], self._window_size[0] - shift[0]], [shift[1], self._window_size[1] - shift[1]], [0, 0]]) 
+    # #   else:
+    # #     shifted_x = window_reverse(attn_windows, self._window_size, Hp, Wp) # B H' W' C
+
+    # #   if x_output is None:
+    # #     x_output = shifted_x
+    # #   else:
+    # #     x_output = x_output + shifted_x
+    
+    # # if pad_r > 0 or pad_b > 0:
+    # #   x_output = x_output[:, :H, :W, :]
+    # else:
     x_output = self._attention_layer(x, mask=mask, training=training)
 
     if self._use_shortcut:
@@ -771,10 +800,10 @@ class LeFFN(tf.keras.layers.Layer):
     self.act = _get_activation_fn(self._activation, leaky_alpha=self._leaky)
     return 
 
-  def call(self, x_in):
-    x = self.dw_spatial_sample(x_in)
-    x = self.norm_spatial_sample(x)
-    x = self.act(x)
+  def call(self, x):
+    # x = self.dw_spatial_sample(x)
+    # x = self.norm_spatial_sample(x)
+    # x = self.act(x)
 
     x = self.fc_expand(x)
     x = self.act(x)

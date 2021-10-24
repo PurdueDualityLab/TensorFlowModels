@@ -720,6 +720,7 @@ class ExpandedWindowSelfAttention(tf.keras.layers.Layer):
     else:
       source_windows, _, _ = window_partition_overlaps_br(x, self._window_size)
     
+    # source_windows, _, _ = window_partition(x, self._window_size) 
     query_windows, _, _ = window_partition(x, self._window_size) 
     attn_windows, attn = self.attention(query_windows, 
         source_windows, mask = mask, training = training)

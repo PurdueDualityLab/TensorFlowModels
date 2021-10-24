@@ -293,7 +293,6 @@ class Parser(parser.Parser):
         output_size = [self._image_h, self._image_w])
     classes = tf.gather(classes, inds)
 
-    tf.print(infos)
     info = infos[-1]
 
     image, labels = self._build_label(
