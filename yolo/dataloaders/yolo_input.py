@@ -352,7 +352,7 @@ class Parser(parser.Parser):
       boxes = bbox_ops.denormalize_boxes(gt_boxes, output_size)
       gt_area = (boxes[..., 2] - boxes[..., 0]) * (boxes[..., 3] - boxes[..., 1])
 
-      # gt_area = tf.ones_like(gt_area) * 20
+      gt_area = tf.ones_like(gt_area) * 20
 
       # gt_area = data['groundtruth_area']
 

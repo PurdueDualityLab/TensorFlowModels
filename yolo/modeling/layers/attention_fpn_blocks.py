@@ -265,6 +265,7 @@ class WindowedAttention(tf.keras.layers.Layer):
 
   def build(self, input_shape):
     self.dims = input_shape[-1]
+    print(input_shape)
 
     self.attention = SpatialAttention(
       self._num_heads, 
@@ -600,6 +601,134 @@ class ShiftedWindowSelfAttention(tf.keras.layers.Layer):
         self._window_size, x_shifts, H, W)
     return x_output
 
+class ExpandedWindowSelfAttention(tf.keras.layers.Layer):
+
+  def __init__(self, 
+               window_size, 
+               num_heads, 
+               tlbr = False,
+               shift = False, 
+               kernel_size = 1,
+               post_kernel_size = None,
+               groups = 1, 
+               strides = 1, 
+               use_separable_conv = True, 
+               use_bn=True,
+               use_sync_bn=False,
+               norm_momentum=0.99,
+               norm_epsilon=0.001,
+               dilation_rate = 1, 
+               qkv_bias = True, 
+               qk_scale = None, 
+               drop_path = 0.0,
+               attention_dropout = 0.0, 
+               attention_activation = 'softmax', # typically jsut soft max, more for future developments of something better 
+               project_attention = True, 
+               projection_dropout = 0.0, 
+               projection_expansion = 1.0,
+               projection_use_bias = False, 
+               projection_activation = None, 
+               relative_bias_initializer='TruncatedNormal', 
+               kernel_initializer='TruncatedNormal',
+               kernel_regularizer=None,
+               bias_initializer='zeros',
+               bias_regularizer=None, 
+               **kwargs):
+
+    super().__init__(**kwargs)
+    self._kernel_size = kernel_size
+    self._post_kernel_size = post_kernel_size or kernel_size
+    self._groups = groups
+    self._strides = strides
+    self._use_separable_conv = use_separable_conv
+    self._dilation_rate = dilation_rate
+
+    if isinstance(window_size, int):
+      window_size = (window_size, window_size)
+    self._window_size = window_size
+
+    self._tlbr = tlbr
+
+    self._num_heads = num_heads
+    self._qkv_bias = qkv_bias
+    self._qk_scale = qk_scale 
+    self._shift = shift
+
+    self._use_bn = use_bn
+    self._use_sync_bn = use_sync_bn
+    self._norm_momentum = norm_momentum
+    self._norm_epsilon = norm_epsilon
+
+    self._project_attention = project_attention
+    self._projection_dropout = projection_dropout
+    self._projection_expansion = projection_expansion
+    self._projection_use_bias = projection_use_bias
+    self._projection_activation = projection_activation
+
+    # dropout
+    self._attention_activation = attention_activation
+    self._attention_dropout = attention_dropout
+    self._drop_path = drop_path
+
+    # init and regularizer
+    self._init_args = dict(
+      kernel_initializer = _get_initializer(kernel_initializer),
+      bias_initializer = bias_initializer,
+      kernel_regularizer = kernel_regularizer,
+      bias_regularizer = bias_regularizer,
+      relative_bias_initializer = _get_initializer(relative_bias_initializer)
+    )
+    return 
+
+
+  def build(self, input_shape):
+    self.attention = WindowedAttention(
+      self._num_heads,
+      kernel_size=self._kernel_size,
+      post_kernel_size=self._post_kernel_size,
+      groups=self._groups, 
+      strides=self._strides, 
+      use_separable_conv=self._use_separable_conv, 
+      dilation_rate=self._dilation_rate, 
+      qkv_bias=self._qkv_bias, 
+      qk_scale=self._qk_scale, 
+      use_bn = self._use_bn,
+      use_sync_bn = self._use_sync_bn,
+      norm_momentum = self._norm_momentum,
+      norm_epsilon = self._norm_epsilon,
+      attention_dropout=self._attention_dropout, 
+      attention_activation=self._attention_activation, 
+      project_attention = self._project_attention,
+      projection_dropout = self._projection_dropout,
+      projection_expansion = self._projection_expansion,
+      projection_use_bias = self._projection_use_bias,
+      projection_activation = self._projection_activation,
+      **self._init_args 
+    )
+
+    if self._drop_path > 0.0:
+      self.drop_path = nn_layers.StochasticDepth(self._drop_path)
+    else:
+      self.drop_path = Identity()
+    return
+
+  def call(self, x, mask = None, training = None):
+    x, H, W, C, Hp, Wp = pad(x, self._window_size)
+
+    if self._tlbr:
+      source_windows, _, _ = window_partition_overlaps_tlbr(x, self._window_size)
+    else:
+      source_windows, _, _ = window_partition_overlaps_br(x, self._window_size)
+    
+    query_windows, _, _ = window_partition(x, self._window_size) 
+    attn_windows, attn = self.attention(query_windows, 
+        source_windows, mask = mask, training = training)
+    
+    x_output = window_reverse(attn_windows, self._window_size, Hp, Wp)
+    if Hp != H or Wp != W:
+      x_output = x_output[:, :H, :W, :]
+    return x_output
+
 class MergeShapeToMatch(tf.keras.layers.Layer):
   def __init__(self, 
                window_size, 
@@ -888,16 +1017,16 @@ if __name__ == "__main__":
   for k, s in inputs.items():
     built[k] = tf.ones(inputs[k])
 
-  # layer = ShiftedWindowSelfAttention(20, 8, kernel_size=(1, 1), projection_expansion = 1.0)
-  # output, _ = layer(built["5"])
-  # print(output.shape)
+  layer = ExpandedWindowSelfAttention(20, 8, kernel_size=(1, 1), projection_expansion = 1.0)
+  output = layer(built["5"])
+  print(output.shape)
 
-  layer = MergeShapeToMatch(8, 8, kernel_size=(1, 1), shift = True, projection_expansion = 1.0)
-  output4 = layer([built["5"], built["4"]])
-  layer = MergeShapeToMatch(8, 8, kernel_size=(1, 1), shift = True, projection_expansion = 1.0)
-  output3 = layer([output4, built["3"]])
-  layer = MergeShapeToMatch(16, 8, kernel_size=(1, 1), shift = True, projection_expansion = 1.0)
-  output4 = layer([output3, output4])
-  layer = MergeShapeToMatch(16, 8, kernel_size=(1, 1), shift = True, projection_expansion = 1.0)
-  output5 = layer([output4, built["5"]])
-  print(output4.shape, output5.shape)
+  # layer = MergeShapeToMatch(8, 8, kernel_size=(1, 1), shift = True, projection_expansion = 1.0)
+  # output4 = layer([built["5"], built["4"]])
+  # layer = MergeShapeToMatch(8, 8, kernel_size=(1, 1), shift = True, projection_expansion = 1.0)
+  # output3 = layer([output4, built["3"]])
+  # layer = MergeShapeToMatch(16, 8, kernel_size=(1, 1), shift = True, projection_expansion = 1.0)
+  # output4 = layer([output3, output4])
+  # layer = MergeShapeToMatch(16, 8, kernel_size=(1, 1), shift = True, projection_expansion = 1.0)
+  # output5 = layer([output4, built["5"]])
+  # print(output4.shape, output5.shape)

@@ -126,7 +126,7 @@ def roll_image_up_tlbr(image, P):
   image = tf.reshape(image, [-1, Ww * 2, Wh * 2, C])
   return image
 
-def window_partition_overlaps_tlbr(image, window_size, crop = True):
+def window_partition_overlaps_tlbr(image, window_size):
   image = pad_one_window(image, window_size)
   image, _,_,_,_,_ = pad(image, window_size)
   x, Ph, Pw = window_partition(image, window_size)
