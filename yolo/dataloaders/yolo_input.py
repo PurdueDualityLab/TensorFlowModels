@@ -346,9 +346,11 @@ class Parser(parser.Parser):
 
     # Update the labels dictionary.
     if not is_training:
-      output_size = tf.cast([height, width], tf.float32)
-      boxes = bbox_ops.denormalize_boxes(gt_boxes, output_size)
-      gt_area = (boxes[..., 2] - boxes[..., 0]) * (boxes[..., 3] - boxes[..., 1])
+      # output_size = tf.cast([height, width], tf.float32)
+      # boxes = bbox_ops.denormalize_boxes(gt_boxes, output_size)
+      # gt_area = (boxes[..., 2] - boxes[..., 0]) * (boxes[..., 3] - boxes[..., 1])
+
+      gt_area = data['groundtruth_areas']
 
       # Sets up groundtruth data for evaluation.
       groundtruths = {
