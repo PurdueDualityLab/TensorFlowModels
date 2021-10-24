@@ -116,12 +116,14 @@ def roll_image_up_tlbr(image, P):
   image_cat1 = tf.concat([image_rolln1, image, image_rollp1], axis = -2)
   image_rollp2 = image_cat1[:, int(math.sqrt(P)):, ...] 
   image_rollp2 = tf.pad(image_rollp2, [[0,0],[0, int(math.sqrt(P))],[0,0],[0,0],[0,0]])
+  image_rollp2 = image_rollp2[:, :, :-Wh//2, :, ...]
 
   image_rolln2 = image_cat1[:, :-int(math.sqrt(P)), ...] 
   image_rolln2 = tf.pad(image_rolln2, [[0,0],[int(math.sqrt(P)), 0],[0,0],[0,0],[0,0]])
+  image_rolln2 = image_rolln2[:, :, Wh//2:, :, ...]
   image = tf.concat([image_rolln2, image_cat1, image_rollp2], axis = -3)
   
-  image = tf.reshape(image, [-1, Ww * 2, Wh * 3, C])
+  image = tf.reshape(image, [-1, Ww * 2, Wh * 2, C])
   return image
 
 def window_partition_overlaps_tlbr(image, window_size, crop = True):
@@ -130,25 +132,10 @@ def window_partition_overlaps_tlbr(image, window_size, crop = True):
   x, Ph, Pw = window_partition(image, window_size)
   _,_,_,C = x.shape
   x = roll_image_up_tlbr(x, Ph * Pw)
-  x = tf.reshape(x, [-1, Ph, Pw, window_size[0] * 3, 2 * window_size[1], C])
+  x = tf.reshape(x, [-1, Ph, Pw, window_size[0] * 2, 2 * window_size[1], C])
   x = x[:, 1:-1, 1:-1, ...]
-  x = tf.reshape(x, [-1, window_size[0] * 3 , 2 * window_size[1], C])
-  Ph, Pw = 2 * Ph, 3 *Pw
-
-  # if crop:
-  #   p1 = window_size[0] * 3
-  #   p2 = window_size[1] * 3
-
-  #   s1 = int(window_size[0] * 2)
-  #   s2 = int(window_size[1] * 2)
-
-  #   t1 = (p1 - s1)//2
-  #   t2 = (p2 - s2)//2
-  #   x = x[:, t1:-t1, t2:-t2, :]
-
-  #   #x = tf.slice(x, [0,(p1 - s1)//2, (p2 - s2)//2,0], [-1, s1, s2, -1])
-
-  #   Ph, Pw = 2 * Ph, 2 *Pw
+  x = tf.reshape(x, [-1, window_size[0] * 2 , 2 * window_size[1], C])
+  Ph, Pw = 2 * Ph, 2 *Pw
   return x, Ph, Pw
 
 def roll_image_up_br(image, P):
@@ -216,28 +203,28 @@ if __name__ == "__main__":
   image = tf.expand_dims(image, axis = 0)
   image = tf.tile(image, [batches, 1, 1, 1])
   image, _,_,_,_,_ = pad(image, window_size)
-  image, Ph, Pw = window_partition_overlaps_tlbr(image, window_size)
+  image, Ph, Pw = window_partition_overlaps_br(image, window_size)
   draw_patches(image, batches, 0)
 
-  # import time
-  # a = time.time()
-  # for i in range(100):
-  #   image_, _,_,_,_,_ = pad(image, window_size)
-  #   image_, Ph, Pw = window_partition_overlaps_br(image_, window_size)
-  #   del image_
-  # b = time.time()
-  # print(b - a)
+  import time
+  a = time.time()
+  for i in range(100):
+    image_, _,_,_,_,_ = pad(image, window_size)
+    image_, Ph, Pw = window_partition_overlaps_br(image_, window_size)
+    del image_
+  b = time.time()
+  print(b - a)
 
-  # a = time.time()
-  # for i in range(100):
-  #   image_, _,_,_,_,_ = pad(image, window_size)
-  #   image_, Ph, Pw = window_partition_overlaps_tlbr(image_, window_size)
-  # b = time.time()
-  # print(b - a)
+  a = time.time()
+  for i in range(100):
+    image_, _,_,_,_,_ = pad(image, window_size)
+    image_, Ph, Pw = window_partition_overlaps_tlbr(image_, window_size)
+  b = time.time()
+  print(b - a)
 
-  # a = time.time()
-  # for i in range(100):
-  #   image_, _,_,_,_,_ = pad(image, window_size)
-  #   image_, Ph, Pw = window_partition(image_, window_size)
-  # b = time.time()
-  # print(b - a)
+  a = time.time()
+  for i in range(100):
+    image_, _,_,_,_,_ = pad(image, window_size)
+    image_, Ph, Pw = window_partition(image_, window_size)
+  b = time.time()
+  print(b - a)
