@@ -96,7 +96,7 @@ trainer:
     learning_rate:
       type: cosine
       cosine:
-        initial_learning_rate: 0.001
+        initial_learning_rate: 0.0001
         alpha: 0.01
         decay_steps: 295680
     warmup:
