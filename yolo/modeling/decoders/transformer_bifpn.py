@@ -20,7 +20,8 @@ from numpy.core.numeric import outer
 from official.modeling import hyperparams
 
 import tensorflow as tf
-from yolo.modeling.layers import nn_blocks, attention_fpn_blocks
+from yolo.modeling.layers import nn_blocks
+from yolo.modeling.layers import attention_fpn_blocks2 as attention_fpn_blocks
 from official.vision.beta.modeling.decoders import factory
 
 
@@ -50,25 +51,25 @@ def build_tbifpn_decoder(
       decoder_cfg.activation if decoder_cfg.activation != 'same' else
       norm_activation_config.activation)
 
-  model = attention_fpn_blocks.TBiFPN(
-    input_specs, 
-    use_patch_expansion = decoder_cfg.use_patch_expansion, 
-    fpn_only=decoder_cfg.fpn_only, 
-    repititions=decoder_cfg.repititions, 
-    include_detokenization=decoder_cfg.include_detokenization, 
-    use_separable_conv=decoder_cfg.use_separable_conv, 
-    window_size=decoder_cfg.window_size, 
-    token_size=decoder_cfg.token_size, 
-    mlp_ratio=decoder_cfg.mlp_ratio, 
-    kernel_size=decoder_cfg.kernel_size, 
-    use_sync_bn=norm_activation_config.use_sync_bn,
-    norm_momentum=norm_activation_config.norm_momentum,
-    norm_epsilon=norm_activation_config.norm_epsilon,
-    conv_activation=activation,
-    kernel_regularizer=l2_regularizer, 
-    shift = decoder_cfg.shift,
-    expansion_kernel_size = decoder_cfg.expansion_kernel_size, 
-  )
+  model = attention_fpn_blocks.TBiFPN(input_specs)
+  #   input_specs, 
+  #   use_patch_expansion = decoder_cfg.use_patch_expansion, 
+  #   fpn_only=decoder_cfg.fpn_only, 
+  #   repititions=decoder_cfg.repititions, 
+  #   include_detokenization=decoder_cfg.include_detokenization, 
+  #   use_separable_conv=decoder_cfg.use_separable_conv, 
+  #   window_size=decoder_cfg.window_size, 
+  #   token_size=decoder_cfg.token_size, 
+  #   mlp_ratio=decoder_cfg.mlp_ratio, 
+  #   kernel_size=decoder_cfg.kernel_size, 
+  #   use_sync_bn=norm_activation_config.use_sync_bn,
+  #   norm_momentum=norm_activation_config.norm_momentum,
+  #   norm_epsilon=norm_activation_config.norm_epsilon,
+  #   conv_activation=activation,
+  #   kernel_regularizer=l2_regularizer, 
+  #   shift = decoder_cfg.shift,
+  #   expansion_kernel_size = decoder_cfg.expansion_kernel_size, 
+  # )
   return model
 
 

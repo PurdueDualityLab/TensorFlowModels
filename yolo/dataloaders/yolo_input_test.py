@@ -34,9 +34,9 @@ def test_yolo_input_task():
   # with tf.device('/CPU:0'):
   # experiment = "yolo_darknet"
   experiment = "large_yolo"
-  # config_path = ["yolo/configs/experiments/yolov4/tpu/512-wd.yaml"]
-  config_path = ["yolo/configs/experiments/scaledyolov4-p6/yolo_l_p6_1280_tpu.yaml"]
-  config_path = ["yolo/configs/experiments/yolov4-csp/inference/640.yaml"]
+  config_path = ["yolo/configs/experiments/yolov4/tpu/512.yaml"]
+  # config_path = ["yolo/configs/experiments/scaledyolov4-p6/yolo_l_p6_1280_tpu.yaml"]
+  # config_path = ["yolo/configs/experiments/yolov4-csp/inference/640.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp-anchor-free/tpu/640.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4/tpu/512-mb.yaml"]
 
@@ -129,6 +129,22 @@ def test_classification_pipeline():
 
 import time
 
+def undo_info(boxes, info, num_detections = None):
+  if num_detections is not None:
+    mask = tf.sequence_mask(num_detections, maxlen=tf.shape(boxes)[1])
+    boxes = tf.cast(tf.expand_dims(mask, axis = -1), boxes.dtype) * boxes
+
+  inshape = tf.expand_dims(info[:, 1, :], axis = 1)
+  ogshape = tf.expand_dims(info[:, 0, :], axis = 1)
+  scale = tf.expand_dims(info[:, 2, :], axis = 1)
+  offset = tf.expand_dims(info[:, 3, :], axis = 1)
+
+  boxes = box_ops.denormalize_boxes(boxes, inshape)
+  boxes += tf.tile(offset, [1, 1, 2])
+  boxes /= tf.tile(scale, [1, 1, 2])
+  boxes = box_ops.clip_boxes(boxes, ogshape)
+  boxes = box_ops.normalize_boxes(boxes, ogshape)  
+  return boxes
 
 def test_yolo_pipeline(is_training=True, num=30):
   dataset, dsp, config = test_yolo_input_task()
@@ -149,11 +165,16 @@ def test_yolo_pipeline(is_training=True, num=30):
   data = dataset if is_training else dsp
   data = data.take(num)
   for l, (i, j) in enumerate(data):
+    boxess = j['bbox']
+
     ftime = time.time()
-    i_ = tf.image.draw_bounding_boxes(i, j['bbox'], [[1.0, 0.0, 1.0]])
+    i_ = tf.image.draw_bounding_boxes(i, boxess, [[1.0, 0.0, 1.0]])
 
     gt = j['true_conf']
     inds = j['inds']
+
+
+
 
     obj3 = tf.clip_by_value(gt['3'][..., 0], 0.0, 1.0)
     obj4 = tf.clip_by_value(gt['4'][..., 0], 0.0, 1.0)
@@ -291,5 +312,5 @@ def test_ret_pipeline():
 if __name__ == '__main__':
   # time_pipeline(num=100)
   # test_classification_pipeline()
-  test_yolo_pipeline(is_training=True, num=20)
+  # test_yolo_pipeline(is_training=True, num=20)
   test_yolo_pipeline(is_training=False, num=11)

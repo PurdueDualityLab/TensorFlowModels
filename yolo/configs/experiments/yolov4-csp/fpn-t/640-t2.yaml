@@ -20,7 +20,7 @@ task:
       type: tbifpn_decoder
       tbifpn_decoder:
         token_size: 32
-        repititions: 3
+        repititions: 1
         use_separable_conv: false
         expansion_kernel_size: 1
         use_patch_expansion: False

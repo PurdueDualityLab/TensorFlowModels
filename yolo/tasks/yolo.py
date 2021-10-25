@@ -56,6 +56,7 @@ class YoloTask(base_task.Task):
     self._loss_fn = None
     self._model = None
     self._coco_91_to_80 = False
+    self._annotation_file = self.task_config.annotation_file
     self._metrics = []
 
     # globally set the random seed
@@ -220,8 +221,9 @@ class YoloTask(base_task.Task):
     self._metrics = metrics
     if not training:
       annotation_file = self.task_config.annotation_file
-      if self._coco_91_to_80:
-        annotation_file = None
+      # if self._coco_91_to_80:
+      #   # annotation_file = None
+        # self._annotation_file = annotation_file
       self.coco_metric = coco_evaluator.COCOEvaluator(
           annotation_file=annotation_file,
           include_mask=False,
@@ -282,16 +284,22 @@ class YoloTask(base_task.Task):
         logs.update({m.name: m.result()})
     return logs
 
-  def _reorg_boxes(self, boxes, num_detections, image):
+  def _reorg_boxes(self, boxes, info, num_detections):
     """Scale and Clean boxes prior to Evaluation."""
-
-    # Build a prediciton mask to take only the number of detections
     mask = tf.sequence_mask(num_detections, maxlen=tf.shape(boxes)[1])
-    mask = tf.cast(tf.expand_dims(mask, axis=-1), boxes.dtype)
+    mask = tf.cast(tf.expand_dims(mask, axis = -1), boxes.dtype)
 
     # Denormalize the boxes by the shape of the image
-    inshape = tf.cast(preprocessing_ops.get_image_shape(image), boxes.dtype)
+    inshape = tf.expand_dims(info[:, 1, :], axis = 1)
+    ogshape = tf.expand_dims(info[:, 0, :], axis = 1)
+    scale = tf.expand_dims(info[:, 2, :], axis = 1)
+    offset = tf.expand_dims(info[:, 3, :], axis = 1)
+
     boxes = box_ops.denormalize_boxes(boxes, inshape)
+    boxes = box_ops.clip_boxes(boxes, inshape)
+    boxes += tf.tile(offset, [1, 1, 2])
+    boxes /= tf.tile(scale, [1, 1, 2])
+    boxes = box_ops.clip_boxes(boxes, ogshape)
 
     # Mask the boxes for usage
     boxes *= mask
@@ -319,10 +327,29 @@ class YoloTask(base_task.Task):
     logs = {self.loss: metric_loss}
 
     # Reorganize and rescale the boxes
-    boxes = self._reorg_boxes(y_pred['bbox'], y_pred['num_detections'], image)
-    label['groundtruths']["boxes"] = self._reorg_boxes(
-        label['groundtruths']["boxes"], label['groundtruths']["num_detections"],
-        image)
+    info = label['groundtruths']['image_info']
+
+    if self._coco_91_to_80 and self._annotation_file is not None:
+      # undo the coco80 to 91
+      class_ids = [
+          1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
+          23, 24, 25, 27, 28, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43,
+          44, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62,
+          63, 64, 65, 67, 70, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 84, 85,
+          86, 87, 88, 89, 90
+      ]
+      new_classes = tf.expand_dims(tf.cast(class_ids, y_pred['classes'].dtype), axis=0)
+      new_classes = tf.expand_dims(new_classes, axis=0)
+
+      cmask = tf.range(0, 80)
+      cmask = tf.expand_dims(tf.cast(cmask, y_pred['classes'].dtype), axis=0)
+      cmask = tf.expand_dims(cmask, axis=0)
+
+      preds = tf.expand_dims(y_pred['classes'], axis=-1)
+      mask = tf.cast(preds == cmask, cmask.dtype)
+      y_pred['classes'] = tf.reduce_max(mask * new_classes + (mask - 1), axis = -1)
+
+    boxes = self._reorg_boxes(y_pred['bbox'], info, y_pred["num_detections"])
 
     # Build the input for the coc evaluation metric
     coco_model_outputs = {

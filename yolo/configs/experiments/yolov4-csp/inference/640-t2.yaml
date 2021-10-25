@@ -62,7 +62,7 @@ task:
   train_data:
     global_batch_size: 4
     input_path:  '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
-    shuffle_buffer_size: 10000
+    shuffle_buffer_size: 1
     parser:
       mosaic: 
         mosaic_frequency: 1.0
