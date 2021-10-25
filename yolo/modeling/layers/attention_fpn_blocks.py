@@ -909,6 +909,7 @@ class MergeShapeToMatch(tf.keras.layers.Layer):
       dilation_rate = self._dilation_rate,
       **self._init_args
     ) 
+    self.act = _get_activation_fn(self._expansion_activation)
     return
   
   def s_layer_norm(self, x):
@@ -940,7 +941,7 @@ class MergeShapeToMatch(tf.keras.layers.Layer):
     if self._channel_match:
       source = self.channel_match(source)
 
-    return source + self._ffn(x + source)
+    return self.act(source + self._ffn(x + source))
 
 # once patched channel tokens are established and preserved so K > 1 is ok
 
@@ -1340,6 +1341,7 @@ class TBiFPN(tf.keras.Model):
     if not fpn_only:
       for i in range(min_level, max_level):
         outputs[str(i + 1)] = self.merge_levels(outputs[str(i)], outputs[str(i + 1)])
+
     return outputs
 
   def output_node(self, x):

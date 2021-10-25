@@ -32,8 +32,8 @@ task:
         repititions: 3
         use_separable_conv: false
         expansion_kernel_size: 1
-        use_patch_expansion: False
-        mlp_ratio: 4.0
+        use_patch_expansion: True
+        mlp_ratio: 2.0
     head:
       smart_bias: true
     norm_activation:
