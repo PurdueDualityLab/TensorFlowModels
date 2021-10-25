@@ -71,3 +71,6 @@ task:
       area_thresh: 0.1
   validation_data:
     input_path: 'gs://cam2-datasets/coco/val*'
+trainer:
+  optimizer_config:
+    ema: null
