@@ -26,19 +26,15 @@ class Swin(hyperparams.Config):
   num_heads: List[int] = dataclasses.field(default_factory=lambda:[3, 6, 12, 24]) 
   window_size: List[int] = dataclasses.field(default_factory=lambda:[7, 7, 7, 7]) 
   patch_size: int = 4
-  mlp_ratio: List[float] = dataclasses.field(default_factory=lambda:[4, 4, 4, 4])
+  mlp_ratio: float = 4
   qkv_bias: bool = True
   qk_scale: bool = None
   dropout: float = 0.0
   attention_dropout: float = 0.0
-  drop_path: float = 0.0
+  drop_path: float = 0.1
   absolute_positional_embed: bool = False
   normalize_endpoints: bool = True
   norm_layer: str = 'layer_norm'
-  ignore_shifts: Union[List[bool], bool] =  False
-  alt_shifts: bool = False
-  concat: bool = False
-  cat_input: bool = True
 
 @dataclasses.dataclass
 class Backbone(backbones.Backbone):

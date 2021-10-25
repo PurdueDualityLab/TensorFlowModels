@@ -14,7 +14,6 @@
 
 # Lint as: python3
 """Contains definitions of Swin Backbone Networks."""
-from operator import concat
 from typing import List
 import tensorflow as tf
 import math
@@ -22,13 +21,13 @@ import numpy as np
 
 from official.modeling import hyperparams
 from official.vision.beta.modeling.backbones import factory
-from yolo.modeling.layers import attention_blocks
+from yolo.modeling.layers import attention_blocks as nn_blocks
 
 @tf.keras.utils.register_keras_serializable(package='yolo')
 class SwinTransformer(tf.keras.Model):
 
   def __init__(self, 
-               input_specs=tf.keras.layers.InputSpec(shape=[None, 448, 448, 3]),
+               input_specs=tf.keras.layers.InputSpec(shape=[None, 224, 224, 3]),
                min_level = None, 
                max_level = None, 
                embed_dims = 96, 
@@ -37,7 +36,6 @@ class SwinTransformer(tf.keras.Model):
                window_size = 7, 
                patch_size = 4, 
                mlp_ratio = 4, 
-               ignore_shifts = False, 
                qkv_bias = True, 
                qk_scale = None, 
                dropout = 0.0, 
@@ -52,9 +50,6 @@ class SwinTransformer(tf.keras.Model):
                kernel_regularizer=None,
                bias_initializer='zeros',
                bias_regularizer=None, 
-               alt_shifts = False, 
-               concat = False, 
-               cat_input = True, 
                **kwargs):
 
     if kernel_initializer == 'TruncatedNormal':
@@ -69,9 +64,6 @@ class SwinTransformer(tf.keras.Model):
     self._depths = depths
     self._num_layers = len(depths)
     self._num_heads = num_heads
-    self._alt_shifts = alt_shifts
-    self._concat = concat
-    self._cat_input = cat_input
 
     if not isinstance(window_size, list):
       self._window_size = [window_size] * self._num_layers
@@ -82,18 +74,13 @@ class SwinTransformer(tf.keras.Model):
     self._mlp_ratio = mlp_ratio
     self._qkv_bias = qkv_bias
     self._qk_scale = qk_scale
-    self._ignore_shifts = ignore_shifts
 
     self._dropout = dropout
     self._attention_dropout = attention_dropout
     stochastic_drops = np.linspace(0, drop_path, num = sum(self._depths))
     self._drop_path = stochastic_drops.tolist()
 
-    if attention_blocks.USE_SYNC_BN:
-      self._norm_layer_key = "sync_batch_norm"
-    else:
-      self._norm_layer_key = "batch_norm"
-
+    self._norm_layer = norm_layer 
     self._absolute_positional_embed=absolute_positional_embed
     self._activation = activation
     self._normalize_endpoints = normalize_endpoints
@@ -121,10 +108,10 @@ class SwinTransformer(tf.keras.Model):
 
     level = 0 
 
-    embeddings = attention_blocks.PatchEmbed(
+    embeddings = nn_blocks.PatchEmbed(
                         patch_size=self._patch_size, 
                         embed_dimentions=self._embed_dims, 
-                        norm_layer=self._norm_layer_key if self._patch_norm else None, 
+                        norm_layer=self._norm_layer if self._patch_norm else None, 
                         absolute_positional_embed=self._absolute_positional_embed,
                         activation=None, 
                         kernel_initializer = 'VarianceScaling',
@@ -136,34 +123,19 @@ class SwinTransformer(tf.keras.Model):
     x = tf.keras.layers.Dropout(self._dropout)(embeddings)
     for i in range(self._num_layers):
       dpr = self._drop_path[sum(self._depths[:i]):sum(self._depths[:i + 1])]
-
-      if isinstance(self._mlp_ratio, list):
-        mlp_ratio = self._mlp_ratio[i]
-      else:
-        mlp_ratio = self._mlp_ratio
-
-      if isinstance(self._ignore_shifts, list):
-        ignore_shifts = self._ignore_shifts[i]
-      else:
-        ignore_shifts = self._ignore_shifts
-      
-      x_output, x = attention_blocks.SwinTransformerBlock(
-          ignore_shifts=ignore_shifts, 
+      x_output, x = nn_blocks.SwinTransformerBlock(
           depth=self._depths[i], 
           num_heads=self._num_heads[i], 
           window_size=self._window_size[i], 
-          mlp_ratio=mlp_ratio, 
+          mlp_ratio=self._mlp_ratio, 
           qkv_bias=self._qkv_bias, 
           qk_scale=self._qk_scale, 
           dropout=self._dropout, 
           attention_dropout=self._attention_dropout, 
           drop_path=dpr, 
-          norm_layer=self._norm_layer_key, 
+          norm_layer=self._norm_layer, 
           downsample='patch_and_merge' if (i < self._num_layers - 1) else None, 
           activation=self._activation, 
-          alt_shifts=self._alt_shifts,
-          concat=self._concat,
-          cat_input=self._cat_input,
           **self._init_args)(x)
       outputs[str(level)] = x_output
       level += 1
@@ -180,8 +152,11 @@ class SwinTransformer(tf.keras.Model):
     for i in range(self._min_level, self._max_level + 1):
       x = outputs[str(i)]
       if self._normalize_endpoints:
-        # endpoints[str(i)] = attention_blocks._get_norm_fn(self._norm_layer)()(x)
-        endpoints[str(i)] = attention_blocks._get_norm_fn(self._norm_layer_key)()(x)
+        norm_fn = nn_blocks._get_norm_fn(self._norm_layer)()
+
+        _, H, W, C = x.shape
+        x = tf.reshape(x, [-1, H * W, C])
+        endpoints[str(i)] = tf.reshape(norm_fn(x), [-1, H, W, C])
       else:
         endpoints[str(i)] = x
       output_specs[str(i)] = endpoints[str(i)].get_shape()
@@ -247,11 +222,7 @@ def build_swin(
       normalize_endpoints=backbone_config.normalize_endpoints,
       absolute_positional_embed=backbone_config.absolute_positional_embed,
       activation=norm_activation_config.activation,
-      kernel_regularizer=l2_regularizer, 
-      alt_shifts = backbone_config.alt_shifts, 
-      concat = backbone_config.concat, 
-      cat_input = backbone_config.cat_input,
-      ignore_shifts = backbone_config.ignore_shifts)
+      kernel_regularizer=l2_regularizer)
   model.summary()
   return model
 

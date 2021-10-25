@@ -17,7 +17,7 @@
 import logging
 from official.vision.beta.ops import spatial_transform_ops
 from typing import List, Tuple
-from yolo.modeling.layers import nn_blocks, attention_blocks
+from yolo.modeling.layers import nn_blocks
 from yolo.modeling.layers.attention_utils import *
 import tensorflow as tf
 import numpy as np
@@ -941,7 +941,7 @@ class MergeShapeToMatch(tf.keras.layers.Layer):
     if self._channel_match:
       source = self.channel_match(source)
 
-    return source + self._ffn(x + source)
+    return self._ffn(x + source)
 
 # once patched channel tokens are established and preserved so K > 1 is ok
 
@@ -983,6 +983,9 @@ class FFN(tf.keras.layers.Layer):
     self._cat_input = cat_input
     self._kernel_size = abs(kernel_size)
     self._strides = strides
+    self._norm_momentum = norm_momentum
+    self._norm_epsilon = norm_epsilon
+    self._activation = activation
 
     # init and regularizer
     self._init_args = dict(
@@ -1000,33 +1003,56 @@ class FFN(tf.keras.layers.Layer):
       bias_regularizer = bias_regularizer,
       leaky_alpha = leaky_alpha)
 
+    self._dw_init = dict(
+      kernel_initializer = _get_initializer(kernel_initializer),
+      bias_initializer = bias_initializer,
+      kernel_regularizer = kernel_regularizer,
+      bias_regularizer = bias_regularizer,
+    )
+
   def build(self, input_shape):
     hidden_features = self._hidden_features or input_shape[-1]
     out_features = self._out_features or input_shape[-1]
 
-    if self._invert:
-      ks1 = 1 
-      s1 = 1
-      ks2 = self._kernel_size
-      s2 = self._strides
-    else:
-      ks1 = self._kernel_size
-      s1 = self._strides
-      ks2 = 1 
-      s2 = 1
+    self.spatial_info = tf.keras.layers.DepthwiseConv2D(
+                              3, strides = self._strides, 
+                              padding = "same", 
+                              use_bias = False, 
+                              **self._dw_init)
+    self.bn = tf.keras.layers.BatchNormalization(
+      momentum = self._norm_momentum,
+      epsilon = self._norm_epsilon,
+    )
+    self.act = _get_activation_fn(self._activation)
 
     self.fc_expand = nn_blocks.ConvBN(filters = hidden_features, 
-                                      kernel_size = ks1,
-                                      strides = s1, 
+                                      kernel_size = 1,
+                                      strides = 1, 
                                       **self._init_args)
     self.fc_compress = nn_blocks.ConvBN(filters = out_features, 
-                                        kernel_size = ks2,
-                                        strides = s2, 
+                                        kernel_size = 1,
+                                        strides = 1, 
                                         **self._init_args)
+
+    # self.fc_expand = nn_blocks.ConvBN(filters = hidden_features, 
+    #                                   kernel_size = ks1,
+    #                                   strides = s1, 
+    #                                   **self._init_args)
+    # self.fc_compress = nn_blocks.ConvBN(filters = out_features, 
+    #                                     kernel_size = ks2,
+    #                                     strides = s2, 
+    #                                     **self._init_args)
     return 
 
-  def call(self, x_in):
-    x = self.fc_expand(x_in)
+  def dw_reasoning(self, x):
+    x = self.spatial_info(x)
+    x = self.bn(x)
+    x = self.act(x)
+    return x
+
+  def call(self, x):
+    x = self.fc_expand(x)
+    x = self.dw_reasoning(x)
     x = self.fc_compress(x)
     return x
 

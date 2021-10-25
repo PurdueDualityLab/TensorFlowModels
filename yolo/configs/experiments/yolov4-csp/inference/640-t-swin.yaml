@@ -10,13 +10,18 @@ task:
     input_size: [608, 608, 3]
     # input_size: [512, 512, 3]
     backbone:
-      type: 'darknet'
-      darknet:
-        model_id: 'cspdarknet53'
-        max_level: 5
+      type: 'swin'
+      swin:
         min_level: 3
-        depth_scale: 0.75
-        use_separable_conv: False
+        max_level: 5
+        patch_size: 4
+        mlp_ratio: 4.0
+        embed_dims: 96 
+        window_size: [7, 7, 7, 7] 
+        depths: [2, 2, 6, 2]
+        num_heads: [3, 6, 12, 24]
+        drop_path: 0.2
+        absolute_positional_embed: False
     decoder:
       type: tbifpn_decoder
     head:
@@ -30,7 +35,7 @@ task:
       scale_xy:
         'all': 2.0
       max_boxes: 300
-      nms_type: greedy
+      nms_type: tflite
       iou_thresh: 0.25
       nms_thresh: 0.45
       pre_nms_points: 300
