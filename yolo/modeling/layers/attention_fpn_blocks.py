@@ -941,7 +941,7 @@ class MergeShapeToMatch(tf.keras.layers.Layer):
     if self._channel_match:
       source = self.channel_match(source)
 
-    return self.act(source + self._ffn(x + source))
+    return source + self._ffn(x + source)
 
 # once patched channel tokens are established and preserved so K > 1 is ok
 
