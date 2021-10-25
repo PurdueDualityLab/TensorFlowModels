@@ -1283,34 +1283,64 @@ class TBiFPN(tf.keras.Model):
     transformer_args = self._transformer_init_args.copy()
 
     filters = x.shape[-1]
-    point_wise_compress = nn_blocks.ConvBN(filters = filters//2, 
+    # point_wise_compress = nn_blocks.ConvBN(filters = filters//2, 
+    #                                        kernel_size = 1, 
+    #                                        strides = 1, 
+    #                                        use_bn = self._use_bn,
+    #                                        activation = self._activation,
+    #                                        **conv_args, 
+    #                                        **init_args)
+    # spatial_binning = SPP(self._spp_keys, self._weighted)
+    # point_wise_merge_bins = nn_blocks.ConvBN(filters = filters//2, 
+    #                                        kernel_size = 1, 
+    #                                        strides = 1, 
+    #                                        use_bn = self._use_bn,
+    #                                        activation = self._activation,
+    #                                        **conv_args, 
+    #                                        **init_args)
+    # point_wise_merge = nn_blocks.ConvBN(filters = filters, # maybe make a 3x3
+    #                                       kernel_size = 1, 
+    #                                       strides = 1, 
+    #                                       use_bn = self._use_bn,
+    #                                       activation = self._activation,
+    #                                       **conv_args, 
+    #                                       **init_args)
+
+
+    # x = point_wise_compress(x)
+    # x_bins = spatial_binning(x)
+    # x_bins = point_wise_merge_bins(x_bins)
+    # x = point_wise_merge(self.activation(x + x_bins))
+
+    point_wise_compress = nn_blocks.ConvBN(filters = filters, 
+                                           kernel_size = 3, 
+                                           strides = 1, 
+                                           use_bn = self._use_bn,
+                                           activation = self._activation,
+                                           **conv_args, 
+                                           **init_args)
+    # spatial_binning = SPP(self._spp_keys, self._weighted)
+    point_wise_merge_bins = nn_blocks.ConvBN(filters = filters, 
                                            kernel_size = 1, 
                                            strides = 1, 
                                            use_bn = self._use_bn,
                                            activation = self._activation,
                                            **conv_args, 
                                            **init_args)
-    spatial_binning = SPP(self._spp_keys, self._weighted)
-    point_wise_merge_bins = nn_blocks.ConvBN(filters = filters//2, 
-                                           kernel_size = 1, 
-                                           strides = 1, 
-                                           use_bn = self._use_bn,
-                                           activation = self._activation,
-                                           **conv_args, 
-                                           **init_args)
-    point_wise_merge = nn_blocks.ConvBN(filters = filters, # maybe make a 3x3
-                                          kernel_size = 1, 
-                                          strides = 1, 
-                                          use_bn = self._use_bn,
-                                          activation = self._activation,
-                                          **conv_args, 
-                                          **init_args)
+    # point_wise_merge = nn_blocks.ConvBN(filters = filters, # maybe make a 3x3
+    #                                       kernel_size = 1, 
+    #                                       strides = 1, 
+    #                                       use_bn = self._use_bn,
+    #                                       activation = self._activation,
+    #                                       **conv_args, 
+    #                                       **init_args)
 
 
     x = point_wise_compress(x)
-    x_bins = spatial_binning(x)
-    x_bins = point_wise_merge_bins(x_bins)
-    x = point_wise_merge(self.activation(x + x_bins))
+    # x = spatial_binning(x)
+    x = point_wise_merge_bins(x)
+    # x = point_wise_merge(self.activation(x + x_bins))
+
 
     if self._catch_transformer:
       transformer_args["projection_expansion"] = self._catch_projection_expansion
