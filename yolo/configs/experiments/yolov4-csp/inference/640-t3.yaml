@@ -31,7 +31,7 @@ task:
         token_size: 32
         repititions: 3
         use_separable_conv: false
-        expansion_kernel_size: 1
+        expansion_kernel_size: -1
         use_patch_expansion: False
         mlp_ratio: 4.0
     head:

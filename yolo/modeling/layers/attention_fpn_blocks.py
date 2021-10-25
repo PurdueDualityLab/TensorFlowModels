@@ -865,11 +865,21 @@ class MergeShapeToMatch(tf.keras.layers.Layer):
 
 
     if self._upsample == False:
-      self.pool = tf.keras.layers.MaxPool2D(
-              pool_size=self._sample_size,
-              strides=self._sample_size,
-              padding='same',
-              data_format=None)
+      # self.pool = tf.keras.layers.MaxPool2D(
+      #         pool_size=self._sample_size,
+      #         strides=self._sample_size,
+      #         padding='same',
+      #         data_format=None)
+      self.spatial_info = tf.keras.layers.DepthwiseConv2D(
+                                3, strides = self._sample_size, 
+                                padding = "same", 
+                                use_bias = False, 
+                                **self._init_args)
+      self.bn = tf.keras.layers.BatchNormalization(
+        momentum = self._norm_momentum,
+        epsilon = self._norm_epsilon,
+      )
+      self.act = _get_activation_fn(self._expansion_activation)
 
     if self.dims != source_shape[-1]:
       self._channel_match = True
@@ -924,6 +934,12 @@ class MergeShapeToMatch(tf.keras.layers.Layer):
     x = tf.reshape(x, [-1, H * W, C])
     x = self._q_layer_norm(x) 
     x = tf.reshape(x, [-1, H , W, C])
+    return x
+
+  def pool(self, x):
+    x = self.spatial_info(x)
+    x = self.bn(x)
+    x = self.act(x)
     return x
 
   def call(self, inputs, mask = None, training = None):
@@ -1051,8 +1067,12 @@ class FFN(tf.keras.layers.Layer):
     return x
 
   def call(self, x):
-    x = self.fc_expand(x)
-    x = self.dw_reasoning(x)
+    if self._invert:
+      x = self.dw_reasoning(x)
+      x = self.fc_expand(x)
+    else:
+      x = self.fc_expand(x)
+      x = self.dw_reasoning(x)
     x = self.fc_compress(x)
     return x
 
@@ -1118,8 +1138,11 @@ class TBiFPN(tf.keras.Model):
                # catch
                include_catch = True,
                catch_transformer = True, 
-               spp_keys = [3, 5, 7], 
+               # spp_keys = [3, 5, 7], 
+               spp_keys = [5, 9, 13], 
                weighted = [False, False, False],
+               # spp_keys = [3, 5, 7], 
+               # weighted = [True, True, True],
                catch_projection_expansion = 1.0, 
               
                repititions = 1, 
