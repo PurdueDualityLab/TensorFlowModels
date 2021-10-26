@@ -968,6 +968,7 @@ class TBiFPN(tf.keras.Model):
     detokenizer = DeTokenizer(embedding_dims=self._embeding_dims)
     x = detokenizer([x, imp[0], imp[1]])
     x = self.squeeze_expand(x)
+    x = self.activation(x)
     return x
   
   def build_detokenizer(self, inputs, imps):
