@@ -10,14 +10,14 @@ task:
     backbone:
       type: 'darknet'
       darknet:
-        model_id: 'cspdarknet53'
+        model_id: 'darknet53'
         max_level: 5
         min_level: 3
     decoder:
       type: yolo_decoder
       yolo_decoder:
-        version: v4
-        type: csp
+        version: v3
+        type: spp
     head:
       smart_bias: true
     detection_generator:
