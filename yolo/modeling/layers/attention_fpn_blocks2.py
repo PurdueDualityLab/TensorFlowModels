@@ -673,7 +673,7 @@ class Tokenizer(tf.keras.layers.Layer):
         strides = 1, 
         padding = "same", 
         use_bias = False,
-        use_bn = False,
+        use_bn = True,
         use_sync_bn = False,
         norm_momentum = 0.97,
         norm_epsilon = 0.0001,
@@ -949,7 +949,7 @@ class TBiFPN(tf.keras.Model):
     else:
       x, impa, impm = tokenizer([x, impa, impm])
 
-    # x = self.activation(x)
+    x = self.activation(x)
     return x, impa, impm
   
   def build_tokenizer(self, inputs):
