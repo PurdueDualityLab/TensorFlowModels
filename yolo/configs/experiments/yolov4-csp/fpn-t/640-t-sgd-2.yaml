@@ -4,8 +4,8 @@ runtime:
   tpu_enable_xla_dynamic_padder: True
 task:
   model:
-    input_size: [640, 640, 3]
-    # input_size: [608, 608, 3]
+    # input_size: [640, 640, 3]
+    input_size: [608, 608, 3]
     # input_size: [512, 512, 3]
     backbone:
       type: 'darknet'

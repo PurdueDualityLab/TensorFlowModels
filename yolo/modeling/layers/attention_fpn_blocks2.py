@@ -1141,26 +1141,31 @@ class TBiFPN(tf.keras.Model):
       project_attention = False,
     )
 
-    query = self.conv(query, exp2_features)
+    if exp1_features != exp2_features:
+      query = self.conv(query, exp2_features)
 
     nq = self.layer_norm(query)
     ns = self.layer_norm(source)
     x = attention([nq, ns])
-    # x = self.conv(x, exp_features)
-
+    
     if upsample == True:
       source = tf.keras.layers.UpSampling2D(sample_size)(source)
     elif upsample == False:
       source = self.dw_conv(source, sample_size)
     else:
       source = source
-    return self.ffn(x + source, output_features=exp1_features)
+
+    x = tf.keras.layers.Add()([x, source])
+    return self.ffn(x, output_features=exp1_features)
 
   def build_merging(self, inputs, fpn_only):
     outputs = inputs
     min_level = int(min(outputs.keys()))
     max_level = int(max(outputs.keys()))
 
+    if fpn_only:
+      outputs[str(max_level)] = self.merge_levels(outputs[str(max_level)], outputs[str(max_level)])
+      
     #up_merge
     for i in reversed(range(min_level, max_level)):
       level = outputs[str(i)]
@@ -1174,6 +1179,7 @@ class TBiFPN(tf.keras.Model):
     if not fpn_only:
       for i in range(min_level, max_level):
         outputs[str(i + 1)] = self.merge_levels(outputs[str(i)], outputs[str(i + 1)])
+
 
     return outputs
 
