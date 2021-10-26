@@ -37,7 +37,7 @@ def test_yolo_input_task():
   # config_path = ["yolo/configs/experiments/yolov4/tpu/512.yaml"]
   # config_path = ["yolo/configs/experiments/scaledyolov4-p6/yolo_l_p6_1280_tpu.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/inference/640.yaml"]
-  config_path = ["yolo/configs/experiments/yolov4-csp-anchor-free/inference/640-4x.yaml"]
+  config_path = ["yolo/configs/experiments/yolov4-csp-anchor-free/inference/640-6x.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4/tpu/512-mb.yaml"]
 
   config = train_utils.ParseConfigOptions(

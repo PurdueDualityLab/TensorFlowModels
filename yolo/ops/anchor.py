@@ -154,6 +154,7 @@ class YoloAnchorLabeler:
     """
     self.anchors = anchors
     self.masks = self._get_mask()
+    self.use_tie_breaker = use_tie_breaker
     self.anchor_free_level_limits = self._get_level_limits(
                                                 anchor_free_level_limits)
 
@@ -175,7 +176,6 @@ class YoloAnchorLabeler:
     self.level_strides = level_strides
     self.match_threshold = match_threshold
     self.best_matches_only = best_matches_only
-    self.use_tie_breaker = use_tie_breaker
     self.dtype = dtype
 
   def _get_mask(self):
@@ -200,8 +200,13 @@ class YoloAnchorLabeler:
       k = 0
       for i, key in enumerate(self.anchors.keys()):
         level_limits_dict[key] = []
+        
+        base = k 
         for j, lst in enumerate(self.anchors[key]):
-          level_limits_dict[key].append(level_limits[k:k + 2])
+          # level_limits_dict[key].append(level_limits[k:k + 2])
+          if not self.use_tie_breaker:
+            base = k
+          level_limits_dict[key].append([level_limits[base], level_limits[k + 1]])
           k += 1
         level_limits_dict[key] = tf.convert_to_tensor(level_limits_dict[key])
     else:

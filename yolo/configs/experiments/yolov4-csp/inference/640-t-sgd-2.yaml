@@ -10,11 +10,23 @@ task:
     backbone:
       type: 'darknet'
       darknet:
+        # model_id: 'cspdarknet53'
         model_id: 'cspdarknet53'
         max_level: 5
         min_level: 3
-        depth_scale: 0.75
+        depth_scale: 1.0
+        width_scale: 0.75
         use_separable_conv: False
+    # backbone:
+    #   type: 'darknet'
+    #   darknet:
+    #     # model_id: 'cspdarknet53'
+    #     model_id: 'cspdarknettiny'
+    #     max_level: 5
+    #     min_level: 3
+    #     depth_scale: 1.0
+    #     width_scale: 2.0
+    #     use_separable_conv: False
     distinct_fpn:
       type: tbifpn_decoder
       tbifpn_decoder:
@@ -25,7 +37,7 @@ task:
       yolo_decoder:
         version: v3
         type: spp
-        path_process_len: 4
+        path_process_len: 6
     head:
       smart_bias: true
     detection_generator:

@@ -453,7 +453,8 @@ class ShiftedWindowAttention(tf.keras.layers.Layer):
       self.drop_path = Identity()
     return
 
-  def call(self, query, source, mask = None, training = None):
+  def call(self, inputs, mask = None, training = None):
+    query, source = inputs
 
     (q, q_windows, q_shifts, 
     q_split_size, qH, qW, 
@@ -823,6 +824,20 @@ class FFN(tf.keras.layers.Layer):
     x = self.fc_compress(x)
     return x
 
+
+class LayerNorm(tf.keras.layers.Layer):
+
+  def build(self, input_shape):
+    self.norm = _get_norm_fn("layer_norm", epsilon=0.0001, axis = -1)()
+    return
+  
+  def call(self, x):
+    _, H, W, C = x.shape
+    x = tf.reshape(x, [-1, H * W, C])
+    x = self.norm(x) 
+    x = tf.reshape(x, [-1, H , W, C])
+    return x
+
 class TBiFPN(tf.keras.Model):
 
   def __init__(self, 
@@ -862,11 +877,11 @@ class TBiFPN(tf.keras.Model):
     return
 
   def layer_norm(self, x):
-    _, H, W, C = x.shape
-    x = tf.reshape(x, [-1, H * W, C])
-    x = _get_norm_fn("layer_norm", epsilon=0.0001)(axis = -1)(x) 
-    x = tf.reshape(x, [-1, H , W, C])
-    return x
+    # _, H, W, C = x.shape
+    # x = tf.reshape(x, [-1, H * W, C])
+    # x = _get_norm_fn("layer_norm", epsilon=0.0001)(axis = -1)(x) 
+    # x = tf.reshape(x, [-1, H , W, C])
+    return LayerNorm()(x)
   
   def activation(self, x):
     return _get_activation_fn(self._activation)(x)
@@ -1047,10 +1062,57 @@ class TBiFPN(tf.keras.Model):
   #   x = self.ffn(x)
   #   return x
   
+  # # upsample mapping 
+  # def merge_levels(self, source, query, oquery = None):
+  #   num_heads = query.shape[-1]//self._token_size
+  #   exp_features = query.shape[-1]
+    
+  #   sample_size = query.shape[1]/source.shape[1]
+  #   query_window_size = int(self._window_size * sample_size)
+  #   source_window_size = self._window_size
+
+  #   if sample_size > 1:
+  #     sample_size = int(sample_size)
+  #     upsample = True
+  #   elif sample_size < 1:
+  #     sample_size = int(source.shape[1]/query.shape[1])
+  #     query_window_size = int(self._window_size * sample_size)
+  #     query_window_size, source_window_size = source_window_size, query_window_size
+  #     upsample = False
+  #   else:
+  #     upsample = None
+
+  #   attention = ShiftedWindowAttention(
+  #     query_window_size, 
+  #     source_window_size, 
+  #     shift = False, 
+  #     num_heads = num_heads, 
+  #     kernel_size = 1, 
+  #     use_separable_conv = False, 
+  #     qkv_bias=True, 
+  #     qk_scale=None, 
+  #     project_attention = False,
+  #   )
+
+  #   source = self.conv(source, exp_features)
+
+  #   nq = self.layer_norm(query)
+  #   ns = self.layer_norm(source)
+  #   x = attention([nq, ns])
+
+  #   if upsample == True:
+  #     source = tf.keras.layers.UpSampling2D(sample_size)(source)
+  #   elif upsample == False:
+  #     source = self.dw_conv(source, sample_size)
+  #   else:
+  #     source = source
+  #   return self.ffn(x + source)
+
   # upsample mapping 
   def merge_levels(self, source, query, oquery = None):
     num_heads = query.shape[-1]//self._token_size
-    exp_features = query.shape[-1]
+    exp1_features = query.shape[-1]
+    exp2_features = source.shape[-1]
     
     sample_size = query.shape[1]/source.shape[1]
     query_window_size = int(self._window_size * sample_size)
@@ -1079,11 +1141,12 @@ class TBiFPN(tf.keras.Model):
       project_attention = False,
     )
 
-    source = self.conv(source, exp_features)
+    query = self.conv(query, exp2_features)
 
     nq = self.layer_norm(query)
     ns = self.layer_norm(source)
-    x = attention(nq, ns)
+    x = attention([nq, ns])
+    # x = self.conv(x, exp_features)
 
     if upsample == True:
       source = tf.keras.layers.UpSampling2D(sample_size)(source)
@@ -1091,7 +1154,7 @@ class TBiFPN(tf.keras.Model):
       source = self.dw_conv(source, sample_size)
     else:
       source = source
-    return self.ffn(x + source)
+    return self.ffn(x + source, output_features=exp1_features)
 
   def build_merging(self, inputs, fpn_only):
     outputs = inputs
