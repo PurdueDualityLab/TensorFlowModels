@@ -949,7 +949,7 @@ class TBiFPN(tf.keras.Model):
     else:
       x, impa, impm = tokenizer([x, impa, impm])
 
-    x = self.activation(x)
+    # x = self.activation(x)
     return x, impa, impm
   
   def build_tokenizer(self, inputs):
