@@ -52,8 +52,12 @@ task:
       use_sync_bn: true
     num_classes: 80
     anchor_boxes:
-      level_limits: [64, 128]
-      anchors_per_scale: 1
+      # level_limits: [64, 128]
+      # anchors_per_scale: 1
+      # level_limits: [64, 96, 128, 192, 256]
+      # anchors_per_scale: 2
+      level_limits: [32, 64, 96, 128, 160, 192, 224, 256]
+      anchors_per_scale: 3
   train_data:
     global_batch_size: 64
     dtype: float32
@@ -65,7 +69,7 @@ task:
     parser:
       mosaic: 
         mosaic_frequency: 1.0
-        mixup_frequency: 0.2
+        mixup_frequency: 0.0
         mosaic_crop_mode: 'scale'
         mosaic_center: 0.25
         aug_scale_min: 0.1

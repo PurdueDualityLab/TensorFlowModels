@@ -52,6 +52,7 @@ task:
     num_classes: 80
     anchor_boxes:
       level_limits: [64, 128]
+      anchors_per_scale: 1
   train_data:
     global_batch_size: 64
     dtype: float32

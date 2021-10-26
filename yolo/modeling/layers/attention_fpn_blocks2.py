@@ -834,6 +834,7 @@ class TBiFPN(tf.keras.Model):
                activation = "mish",
                repititions = 1, 
                fpn_only = False,
+               tokenize = True, 
                **kwargs) -> None:
     self._embeding_dims = embeding_dims
     self._window_size = window_size or input_specs[str(max(input_specs.keys()))][1]
@@ -841,6 +842,7 @@ class TBiFPN(tf.keras.Model):
     self._token_size = token_size
     self._activation = activation
     self._repititions = repititions
+    self._tokenize = tokenize
 
     inputs = {
         key: tf.keras.layers.Input(shape=value[1:]) for key, value in input_specs.items()
@@ -965,7 +967,10 @@ class TBiFPN(tf.keras.Model):
     impa = None
     impm = None 
     for k, v in inputs.items():
-      v, impa, impm = self.tokenize(v, impa, impm)
+      if self._tokenize:
+        v, impa, impm = self.tokenize(v, impa, impm)
+      else:
+        impa, impm = v, v
       outputs[k] = v
       implicits[k] = (impa, impm)
     return outputs, implicits

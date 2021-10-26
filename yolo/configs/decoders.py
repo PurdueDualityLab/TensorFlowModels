@@ -38,6 +38,7 @@ class TBiFPN(hyperparams.Config):
   repititions: int = 1
   window_size: int = 8
   token_size: int  = 32
+  tokenize: bool = True
 
 @dataclasses.dataclass
 class Decoder(decoders.Decoder):

@@ -168,8 +168,8 @@ class AnchorBoxes(hyperparams.Config):
     if self.level_limits is None:
       boxes = [box.box for box in self.boxes]
     else:
-      boxes = [[1.0, 1.0]] * ((max_level - min_level) + 1)
-      self.anchors_per_scale = 1
+      boxes = [[1.0, 1.0]] * ((max_level - min_level) + 1) * self.anchors_per_scale
+      # self.anchors_per_scale = 1
     
     anchors_per_level = dict()
     start = 0

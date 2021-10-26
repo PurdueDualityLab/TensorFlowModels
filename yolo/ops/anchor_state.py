@@ -197,13 +197,8 @@ class YoloAnchorLabeler:
       level_limits_dict = {}
       level_limits = [0.0] + level_limits + [np.inf]
 
-      k = 0
       for i, key in enumerate(self.anchors.keys()):
-        level_limits_dict[key] = []
-        for j, lst in enumerate(self.anchors[key]):
-          level_limits_dict[key].append(level_limits[k:k + 2])
-          k += 1
-        level_limits_dict[key] = tf.convert_to_tensor(level_limits_dict[key])
+        level_limits_dict[key] = level_limits[i:i + 2]
     else:
       level_limits_dict = None
     return level_limits_dict
@@ -326,7 +321,6 @@ class YoloAnchorLabeler:
     grid_points = tf.squeeze(grid_points, axis=0)
     box_list = boxes
     class_list = classes
-    num_anchors = 1
 
     grid_points = (grid_points + 0.5) * stride
     x_centers, y_centers = grid_points[..., 0], grid_points[..., 1]
@@ -348,15 +342,9 @@ class YoloAnchorLabeler:
     is_in_boxes = tf.reduce_min(box_delta, axis=-1) > 0.0
     if level_limits is not None:
       max_reg_targets_per_im = tf.reduce_max(box_delta, axis=-1)
-      level_limits = tf.cast(level_limits, max_reg_targets_per_im.dtype)
-      num_anchors = tf.shape(level_limits)[0]
-
-      max_reg_targets_per_im = tf.expand_dims(max_reg_targets_per_im, axis = -1)
-
-      gt_min = max_reg_targets_per_im >= level_limits[..., 0]
-      gt_max = max_reg_targets_per_im <= level_limits[..., 1]
+      gt_min = max_reg_targets_per_im >= level_limits[0]
+      gt_max = max_reg_targets_per_im <= level_limits[1]
       is_in_level = tf.logical_and(gt_min, gt_max)
-
     is_in_boxes_all = tf.reduce_any(is_in_boxes, axis=(0, 1), keepdims=True)
 
     # check if the center is in the receptive feild of the this fpn level
@@ -374,20 +362,19 @@ class YoloAnchorLabeler:
     is_in_boxes_and_center = tf.logical_and(is_in_index, is_in_boxes_and_center)
 
     if level_limits is not None:
-      is_in_boxes_and_center = tf.expand_dims(is_in_boxes_and_center, axis = -1)
       is_in_boxes_and_center = tf.logical_and(is_in_level, is_in_boxes_and_center)
-      
-    # if self.use_tie_breaker:
-    #   boxes_all = tf.cast(is_in_boxes_and_center, area.dtype) 
-    #   boxes_all = ((boxes_all * area) + ((1 - boxes_all) * INF))
-    #   boxes_min = tf.reduce_min(boxes_all, axis = -1, keepdims = True)
-    #   boxes_min = tf.where(boxes_min == INF, -1.0, boxes_min)
-    #   is_in_boxes_and_center = boxes_all == boxes_min
+
+    if self.use_tie_breaker:
+      boxes_all = tf.cast(is_in_boxes_and_center, area.dtype) 
+      boxes_all = ((boxes_all * area) + ((1 - boxes_all) * INF))
+      boxes_min = tf.reduce_min(boxes_all, axis = -1, keepdims = True)
+      boxes_min = tf.where(boxes_min == INF, -1.0, boxes_min)
+      is_in_boxes_and_center = boxes_all == boxes_min
 
     # construct the index update grid
-    reps = tf.reduce_sum(tf.cast(is_in_boxes_and_center, tf.int16), axis=-2)
+    reps = tf.reduce_sum(tf.cast(is_in_boxes_and_center, tf.int16), axis=-1)
     indexes = tf.cast(tf.where(is_in_boxes_and_center), tf.int32)
-    y, x, t, a = tf.split(indexes, 4, axis=-1)
+    y, x, t = tf.split(indexes, 3, axis=-1)
 
     boxes = tf.gather_nd(box_list, t)
     classes = tf.cast(tf.gather_nd(class_list, t), boxes.dtype)
@@ -398,8 +385,8 @@ class YoloAnchorLabeler:
 
     # return the samples and the indexes
     samples = tf.concat([boxes, conf, classes], axis=-1)
-    indexes = tf.concat([y, x, a], axis=-1)
-    return indexes, samples, num_anchors
+    indexes = tf.concat([y, x, tf.zeros_like(t)], axis=-1)
+    return indexes, samples
 
   def build_label_per_path(self, 
                            key, 
@@ -425,7 +412,8 @@ class YoloAnchorLabeler:
       ind_mask = tf.ones_like(classes)
       updates = tf.concat([boxes, ind_mask, classes], axis = -1)
     else:
-      (centers, updates, num_anchors) = self._get_anchor_free(key, boxes, classes, height, 
+      num_anchors = 1
+      (centers, updates) = self._get_anchor_free(key, boxes, classes, height, 
                                                  width, stride, scale_xy)
       boxes, ind_mask, classes = tf.split(updates, [4, 1, 1], axis = -1)
       

@@ -18,12 +18,14 @@ task:
         mlp_ratio: 4.0
         embed_dims: 96 
         window_size: [7, 7, 7, 7] 
-        depths: [2, 2, 6, 2]
+        depths: [2, 2, 4, 2]
         num_heads: [3, 6, 12, 24]
         drop_path: 0.2
         absolute_positional_embed: False
     decoder:
       type: tbifpn_decoder
+      tbifpn_decoder:
+        tokenize: False
     head:
       smart_bias: true
     norm_activation:

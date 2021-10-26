@@ -34,10 +34,10 @@ def test_yolo_input_task():
   # with tf.device('/CPU:0'):
   # experiment = "yolo_darknet"
   experiment = "large_yolo"
-  config_path = ["yolo/configs/experiments/yolov4/tpu/512.yaml"]
+  # config_path = ["yolo/configs/experiments/yolov4/tpu/512.yaml"]
   # config_path = ["yolo/configs/experiments/scaledyolov4-p6/yolo_l_p6_1280_tpu.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4-csp/inference/640.yaml"]
-  # config_path = ["yolo/configs/experiments/yolov4-csp-anchor-free/tpu/640.yaml"]
+  config_path = ["yolo/configs/experiments/yolov4-csp-anchor-free/inference/640-4x.yaml"]
   # config_path = ["yolo/configs/experiments/yolov4/tpu/512-mb.yaml"]
 
   config = train_utils.ParseConfigOptions(
@@ -312,5 +312,5 @@ def test_ret_pipeline():
 if __name__ == '__main__':
   # time_pipeline(num=100)
   # test_classification_pipeline()
-  # test_yolo_pipeline(is_training=True, num=20)
+  test_yolo_pipeline(is_training=True, num=20)
   test_yolo_pipeline(is_training=False, num=11)

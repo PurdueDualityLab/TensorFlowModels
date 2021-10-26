@@ -57,6 +57,7 @@ def build_tbifpn_decoder(
     repititions=decoder_cfg.repititions, 
     window_size=decoder_cfg.window_size, 
     token_size=decoder_cfg.token_size, 
+    tokenize=decoder_cfg.tokenize,
     )
   #   input_specs, 
   #   use_patch_expansion = decoder_cfg.use_patch_expansion, 
