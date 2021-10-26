@@ -88,9 +88,9 @@ def build_yolo(input_specs, model_config, l2_regularization):
                                             model_config,
                                             l2_regularization)
 
-    tf.keras.utils.plot_model(backbone, "backbone.png", show_shapes = True)
-    tf.keras.utils.plot_model(distinct_fpn, "transfromer_fpn.png", show_shapes = True)
-    tf.keras.utils.plot_model(decoder, "decoder_fpn.png", show_shapes = True)
+    # tf.keras.utils.plot_model(backbone, "backbone.png", show_shapes = True)
+    # tf.keras.utils.plot_model(distinct_fpn, "transfromer_fpn.png", show_shapes = True)
+    # tf.keras.utils.plot_model(decoder, "decoder_fpn.png", show_shapes = True)
   else:
     decoder = decoder_factory.build_decoder(backbone.output_specs, 
                                             model_config,
