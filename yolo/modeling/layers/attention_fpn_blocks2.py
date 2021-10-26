@@ -715,10 +715,12 @@ class DeTokenizer(Tokenizer):
     #   lp_impm = self.impm
 
     x = inputs[0]
+    
+    x = x + y
     #x = x * lp_impm
     x = self.projection(x)
     #x = x + lp_impa
-    x = self.act(x) + y
+    x = self.act(x)
     return x
 
 class FFN(tf.keras.layers.Layer):
