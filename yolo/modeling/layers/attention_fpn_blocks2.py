@@ -1148,15 +1148,66 @@ class TBiFPN(tf.keras.Model):
     ns = self.layer_norm(source)
     x = attention([nq, ns])
     
+    # # config one 
     if upsample == True:
       source = tf.keras.layers.UpSampling2D(sample_size)(source)
     elif upsample == False:
       source = self.dw_conv(source, sample_size)
     else:
       source = source
-
     x = tf.keras.layers.Add()([x, source])
+
+    # config 2 and 3
+    # x = tf.keras.layers.Add()([x, query])
     return self.ffn(x, output_features=exp1_features)
+
+  # # upsample mapping 
+  # def merge_levels(self, source, query, oquery = None):
+  #   num_heads = query.shape[-1]//self._token_size
+  #   exp1_features = query.shape[-1]
+  #   exp2_features = source.shape[-1]
+    
+  #   sample_size = query.shape[1]/source.shape[1]
+  #   query_window_size = int(self._window_size * sample_size)
+  #   source_window_size = self._window_size
+
+  #   if sample_size > 1:
+  #     sample_size = int(sample_size)
+  #     upsample = True
+  #   elif sample_size < 1:
+  #     sample_size = int(source.shape[1]/query.shape[1])
+  #     query_window_size = int(self._window_size * sample_size)
+  #     query_window_size, source_window_size = source_window_size, query_window_size
+  #     upsample = False
+  #   else:
+  #     upsample = None
+
+  #   attention = ShiftedWindowSelfAttention(
+  #     source_window_size, 
+  #     shift = False, 
+  #     num_heads = num_heads, 
+  #     kernel_size = 1, 
+  #     use_separable_conv = False, 
+  #     qkv_bias=True, 
+  #     qk_scale=None, 
+  #     project_attention = False,
+  #   )
+
+  #   if exp1_features != exp2_features:
+  #     query = self.conv(query, exp2_features)
+
+  #   if upsample == True:
+  #     source = tf.keras.layers.UpSampling2D(sample_size)(source)
+  #   elif upsample == False:
+  #     source = self.dw_conv(source, sample_size)
+  #   else:
+  #     source = source
+  #   x = tf.keras.layers.Add()([query, source])
+  #   x = self.conv(x, exp2_features)
+
+  #   x = self.layer_norm(x)
+  #   x = x + attention(x)
+  #   return self.ffn(x, output_features=exp1_features)
 
   def build_merging(self, inputs, fpn_only):
     outputs = inputs
