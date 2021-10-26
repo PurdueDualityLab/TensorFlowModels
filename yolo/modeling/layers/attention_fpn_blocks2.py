@@ -603,7 +603,7 @@ class ShiftedWindowSelfAttention(tf.keras.layers.Layer):
     return x_output
 
 class TokenizerMlp(tf.keras.layers.Layer):
-  def __init__(self, dims, activation = "mish", mlp_ratio = 0.5, **kwargs) -> None:
+  def __init__(self, dims, activation = "mish", mlp_ratio = 1.5, **kwargs) -> None:
     super().__init__(**kwargs)
     self.dims = dims
     self.activation = activation
