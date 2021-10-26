@@ -74,15 +74,30 @@ def build_yolo(input_specs, model_config, l2_regularization):
                                     model_config.backbone,
                                     model_config.norm_activation,
                                     l2_regularization)
-  decoder = decoder_factory.build_decoder(backbone.output_specs, 
-                                          model_config,
-                                          l2_regularization)
+  distinct_fpn = None 
+  if model_config.distinct_fpn.type is not None:
+    decoder_a = model_config.distinct_fpn
+    decoder_b = model_config.decoder
+
+    model_config.decoder = decoder_a
+    distinct_fpn = decoder_factory.build_decoder(backbone.output_specs, 
+                                            model_config,
+                                            l2_regularization)
+    model_config.decoder = decoder_b
+    decoder = decoder_factory.build_decoder(distinct_fpn.output_specs, 
+                                            model_config,
+                                            l2_regularization)
+  else:
+    decoder = decoder_factory.build_decoder(backbone.output_specs, 
+                                            model_config,
+                                            l2_regularization)
 
   head = build_yolo_head(decoder.output_specs, model_config, l2_regularization)
   detection_generator = build_yolo_detection_generator(model_config,anchor_dict)
 
   model = yolo_model.Yolo(
       backbone=backbone,
+      distinct_fpn=distinct_fpn,
       decoder=decoder,
       head=head,
       detection_generator=detection_generator)

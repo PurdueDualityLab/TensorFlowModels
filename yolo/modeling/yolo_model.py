@@ -22,6 +22,7 @@ class Yolo(tf.keras.Model):
 
   def __init__(self,
                backbone=None,
+               distinct_fpn = None, 
                decoder=None,
                head=None,
                detection_generator=None,
@@ -45,6 +46,7 @@ class Yolo(tf.keras.Model):
 
     # model components
     self._backbone = backbone
+    self._distinct_fpn = distinct_fpn
     self._decoder = decoder
     self._head = head
     self._detection_generator = detection_generator
@@ -53,6 +55,8 @@ class Yolo(tf.keras.Model):
 
   def call(self, inputs, training=False):
     maps = self._backbone(inputs)
+    if self._distinct_fpn is not None:
+      maps = self._distinct_fpn(maps)
     decoded_maps = self._decoder(maps)
     raw_predictions = self._head(decoded_maps)
     if training:

@@ -715,7 +715,7 @@ class DeTokenizer(Tokenizer):
     #   lp_impm = self.impm
 
     x = inputs[0]
-    
+
     x = x + y
     #x = x * lp_impm
     x = self.projection(x)
@@ -836,7 +836,7 @@ class TBiFPN(tf.keras.Model):
                fpn_only = False,
                **kwargs) -> None:
     self._embeding_dims = embeding_dims
-    self._window_size = window_size
+    self._window_size = window_size or input_specs[str(max(input_specs.keys()))][1]
     self._mlp_ratio = mlp_ratio
     self._token_size = token_size
     self._activation = activation
@@ -997,6 +997,52 @@ class TBiFPN(tf.keras.Model):
                 norm_momentum = 0.97,
                 norm_epsilon = 0.001)(x)
 
+  # # upsample self attention
+  # def merge_levels(self, source, query, oquery = None):
+  #   num_heads = query.shape[-1]//self._token_size
+  #   exp_features = query.shape[-1]
+    
+  #   sample_size = query.shape[1]/source.shape[1]
+  #   source_window_size = self._window_size
+
+  #   if sample_size > 1:
+  #     sample_size = int(sample_size)
+  #     upsample = True
+  #   elif sample_size < 1:
+  #     sample_size = int(source.shape[1]/query.shape[1])
+  #     query_window_size = int(self._window_size * sample_size)
+  #     query_window_size, source_window_size = source_window_size, query_window_size
+  #     upsample = False
+  #   else:
+  #     upsample = None
+
+  #   attention = ShiftedWindowSelfAttention( 
+  #     source_window_size, 
+  #     shift = False, 
+  #     num_heads = num_heads, 
+  #     kernel_size = 1, 
+  #     use_separable_conv = False, 
+  #     qkv_bias=True, 
+  #     qk_scale=None, 
+  #     project_attention = False,
+  #   )
+
+  #   if upsample == True:
+  #     source = tf.keras.layers.UpSampling2D(sample_size)(source)
+  #   elif upsample == False:
+  #     source = self.dw_conv(source, sample_size)
+  #   else:
+  #     source = source
+
+  #   source = self.conv(source, exp_features)
+  #   x = query + source
+
+  #   ns = self.layer_norm(x)
+  #   x = attention(ns) + x 
+  #   x = self.ffn(x)
+  #   return x
+  
+  # upsample mapping 
   def merge_levels(self, source, query, oquery = None):
     num_heads = query.shape[-1]//self._token_size
     exp_features = query.shape[-1]

@@ -184,6 +184,8 @@ class Yolo(hyperparams.Config):
       default_factory=lambda: [512, 512, 3])
   backbone: backbones.Backbone = backbones.Backbone(
       type='darknet', darknet=backbones.Darknet(model_id='cspdarknet53'))
+  # distinct_fpn: Optional[decoders.Decoder] = None
+  distinct_fpn: decoders.Decoder = decoders.Decoder(type=None)
   decoder: decoders.Decoder = decoders.Decoder(
       type='yolo_decoder', yolo_decoder=decoders.YoloDecoder(
         version='v4', type='regular'

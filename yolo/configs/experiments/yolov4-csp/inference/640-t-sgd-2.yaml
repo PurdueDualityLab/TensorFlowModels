@@ -1,11 +1,11 @@
 runtime:
-  distribution_strategy: 'tpu'
-  mixed_precision_dtype: 'bfloat16'
-  tpu_enable_xla_dynamic_padder: True
+  distribution_strategy: 'mirrored'
+  mixed_precision_dtype: 'float16'
+  num_gpus: 1
 task:
   model:
-    # input_size: [640, 640, 3]
-    input_size: [608, 608, 3]
+    input_size: [640, 640, 3]
+    # input_size: [608, 608, 3]
     # input_size: [512, 512, 3]
     backbone:
       type: 'darknet'
@@ -15,8 +15,17 @@ task:
         min_level: 3
         depth_scale: 0.75
         use_separable_conv: False
-    decoder:
+    distinct_fpn:
       type: tbifpn_decoder
+      tbifpn_decoder:
+        fpn_only: true
+        window_size: null
+    decoder:
+      type: yolo_decoder
+      yolo_decoder:
+        version: v3
+        type: spp
+        path_process_len: 4
     head:
       smart_bias: true
     detection_generator:
@@ -25,9 +34,10 @@ task:
       scale_xy:
         'all': 2.0
       max_boxes: 300
-      nms_type: iou
-      iou_thresh: 0.001
-      nms_thresh: 0.60
+      nms_type: greedy
+      iou_thresh: 0.25
+      nms_thresh: 0.45
+      pre_nms_points: 500
     loss:
       use_scaled_loss: true
       update_on_repeat: true
@@ -71,36 +81,3 @@ task:
       area_thresh: 0.1
   validation_data:
     input_path: 'gs://cam2-datasets/coco/val*'
-trainer:
-  train_steps: 295680  # epochs: 120
-  validation_steps: 78  # size of validation data
-  validation_interval: 9240
-  steps_per_loop: 1848
-  summary_interval: 1848
-  checkpoint_interval: 1848
-  optimizer_config:
-    ema:
-      average_decay: 0.9999
-      trainable_weights_only: False
-      dynamic_decay: True
-    optimizer:
-      type: 'adamw'
-      adamw:
-        name: AdamWeightDecay
-        beta_1: 0.9
-        beta_2: 0.999
-        weight_decay_rate: 0.005
-        include_in_weight_decay: ['kernel']
-        exclude_from_weight_decay: ['(.)*']
-        gradient_clip_norm: 1.0
-    learning_rate:
-      type: cosine
-      cosine:
-        initial_learning_rate: 0.001
-        alpha: 0.01
-        decay_steps: 295680
-    warmup:
-      type: 'linear'
-      linear:
-        warmup_steps: 5544  # learning rate rises from 0 to 0.1 over 1000 steps
-        warmup_learning_rate: 0.000001

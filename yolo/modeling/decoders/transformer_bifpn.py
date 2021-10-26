@@ -76,20 +76,6 @@ def build_tbifpn_decoder(
   # )
   return model
 
-
-if __name__ == "__main__":
-  inputs = {"3": [2, 80, 80, 256], "4": [2, 40, 40, 512], "5": [2, 20, 20, 1024]}
-
-  built = {}
-  for k, s in inputs.items():
-    built[k] = tf.ones(inputs[k])
-
-  m = TBiFPN(inputs, repititions=2)
-  m.build(inputs)
-
-  m(built)
-  m.summary()
-
       
 
 
