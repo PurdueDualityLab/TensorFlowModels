@@ -685,7 +685,7 @@ class Tokenizer(tf.keras.layers.Layer):
         bias_regularizer=None, 
       )
 
-    self.act = _get_activation_fn(self._activation)
+    self.act = _get_activation_fn("mish")
     return 
   
   def call(self, inputs):
