@@ -865,11 +865,6 @@ class MergeShapeToMatch(tf.keras.layers.Layer):
 
 
     if self._upsample == False:
-      # self.pool = tf.keras.layers.MaxPool2D(
-      #         pool_size=self._sample_size,
-      #         strides=self._sample_size,
-      #         padding='same',
-      #         data_format=None)
       self.spatial_info = tf.keras.layers.DepthwiseConv2D(
                                 3, strides = self._sample_size, 
                                 padding = "same", 

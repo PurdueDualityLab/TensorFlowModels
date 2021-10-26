@@ -818,13 +818,36 @@ class FFN(tf.keras.layers.Layer):
 
 class TBiFPN(tf.keras.Model):
 
-  def __init__(self, input_specs, **kwargs) -> None:
-    self._embeding_dims = None
+  def __init__(self, 
+               input_specs, 
+               embeding_dims = None, 
+               window_size = 8.0, 
+               mlp_ratio = 2.0,
+               token_size = 32, 
+               activation = "mish",
+               repititions = 1, 
+               fpn_only = False,
+               **kwargs) -> None:
+    self._embeding_dims = embeding_dims
+    self._window_size = window_size
+    self._mlp_ratio = mlp_ratio
+    self._token_size = token_size
+    self._activation = activation
+    self._repititions = repititions
+
     inputs = {
         key: tf.keras.layers.Input(shape=value[1:]) for key, value in input_specs.items()
     }
-    outputs, implicits = self.build_tokenizer(inputs)
-    outputs = self.build_detokenizer(outputs, implicits)
+
+    outputs = inputs
+    for i in range(self._repititions):
+      outputs, implicits = self.build_tokenizer(outputs)
+      fpn_only_ = False
+      if i == self._repititions - 1:
+        fpn_only_ = fpn_only
+      outputs = self.build_merging(outputs, fpn_only_)
+      outputs = self.build_detokenizer(outputs, implicits)
+
     self._output_specs = {key: value.shape for key, value in outputs.items()}
     super().__init__(inputs=inputs, outputs=outputs, name='YoloDecoder')
     return
@@ -832,13 +855,50 @@ class TBiFPN(tf.keras.Model):
   def layer_norm(self, x):
     _, H, W, C = x.shape
     x = tf.reshape(x, [-1, H * W, C])
-    x = _get_norm_fn("layer_norm", epsilon=self._norm_epsilon)(axis = -1)(x) 
+    x = _get_norm_fn("layer_norm", epsilon=0.0001)(axis = -1)(x) 
     x = tf.reshape(x, [-1, H , W, C])
     return x
   
   def activation(self, x):
     return _get_activation_fn(self._activation)(x)
-  
+
+
+  def conv(self, x, output_features):
+    x = nn_blocks.ConvBN( # after shift, project the channels to similar arangement 
+        filters = output_features,
+        groups = 1, 
+        kernel_size = 1, 
+        strides = 1, 
+        padding = "same", 
+        use_bias = False,
+        use_bn = True,
+        use_sync_bn = True,
+        norm_momentum = 0.97,
+        norm_epsilon = 0.0001,
+        activation = self._activation, 
+        use_separable_conv = False, 
+        kernel_initializer='TruncatedNormal',
+        kernel_regularizer=None,
+        bias_initializer='zeros',
+        bias_regularizer=None, 
+      )(x)
+    return x
+
+  def dw_conv(self, x, stride):
+    x = tf.keras.layers.DepthwiseConv2D(
+                              3, strides = stride, 
+                              padding = "same", 
+                              use_bias = False, 
+                              kernel_initializer='TruncatedNormal',
+                              kernel_regularizer=None,
+                              bias_initializer='zeros',
+                              bias_regularizer=None)(x)
+    x = tf.keras.layers.BatchNormalization(
+      momentum = 0.97,
+      epsilon = 0.0001,
+    )(x)
+    return self.activation(x)
+
   def squeeze_expand(self, x):
     num_elements = x.shape[-1]
     x = nn_blocks.ConvBN( # after shift, project the channels to similar arangement 
@@ -852,7 +912,7 @@ class TBiFPN(tf.keras.Model):
         use_sync_bn = True,
         norm_momentum = 0.97,
         norm_epsilon = 0.0001,
-        activation = "mish", 
+        activation = self._activation, 
         use_separable_conv = False, 
         kernel_initializer='TruncatedNormal',
         kernel_regularizer=None,
@@ -870,7 +930,7 @@ class TBiFPN(tf.keras.Model):
         use_sync_bn = True,
         norm_momentum = 0.97,
         norm_epsilon = 0.0001,
-        activation = "mish", 
+        activation = self._activation, 
         use_separable_conv = False, 
         kernel_initializer='TruncatedNormal',
         kernel_regularizer=None,
@@ -903,7 +963,6 @@ class TBiFPN(tf.keras.Model):
 
   def detokenize(self, x, imp):
     num_elements = x.shape[-1]
-    
     detokenizer = DeTokenizer(embedding_dims=self._embeding_dims)
     x = detokenizer([x, imp[0], imp[1]])
     x = self.squeeze_expand(x)
@@ -913,6 +972,85 @@ class TBiFPN(tf.keras.Model):
     outputs = {}
     for k, v in inputs.items():
       outputs[k] = self.detokenize(v, imps[k])
+    return outputs
+
+  def ffn(self, x, output_features = None):
+    return FFN(hidden_features=int(x.shape[-1] * self._mlp_ratio),
+                out_features=output_features, 
+                strides = 1, 
+                kernel_size = 1, 
+                activation = self._activation,
+                groups = 1, 
+                use_separable_conv = False, 
+                use_bn = True,
+                use_sync_bn = True,
+                norm_momentum = 0.97,
+                norm_epsilon = 0.001)(x)
+
+  def merge_levels(self, source, query, oquery = None):
+    num_heads = query.shape[-1]//self._token_size
+    exp_features = query.shape[-1]
+    
+    sample_size = query.shape[1]/source.shape[1]
+    query_window_size = int(self._window_size * sample_size)
+    source_window_size = self._window_size
+
+    if sample_size > 1:
+      sample_size = int(sample_size)
+      upsample = True
+    elif sample_size < 1:
+      sample_size = int(source.shape[1]/query.shape[1])
+      query_window_size = int(self._window_size * sample_size)
+      query_window_size, source_window_size = source_window_size, query_window_size
+      upsample = False
+    else:
+      upsample = None
+
+    attention = ShiftedWindowAttention(
+      query_window_size, 
+      source_window_size, 
+      shift = False, 
+      num_heads = num_heads, 
+      kernel_size = 1, 
+      use_separable_conv = False, 
+      qkv_bias=True, 
+      qk_scale=None, 
+      project_attention = False,
+    )
+
+    source = self.conv(source, exp_features)
+
+    nq = self.layer_norm(query)
+    ns = self.layer_norm(source)
+    x = attention(nq, ns)
+
+    if upsample == True:
+      source = tf.keras.layers.UpSampling2D(sample_size)(source)
+    elif upsample == False:
+      source = self.dw_conv(source, sample_size)
+    else:
+      source = source
+    return self.ffn(x + source)
+
+  def build_merging(self, inputs, fpn_only):
+    outputs = inputs
+    min_level = int(min(outputs.keys()))
+    max_level = int(max(outputs.keys()))
+
+    #up_merge
+    for i in reversed(range(min_level, max_level)):
+      level = outputs[str(i)]
+      value = self.merge_levels(outputs[str(i + 1)], outputs[str(i)])
+      # if i != min_level and i != max_level:
+      #   print("here", i)
+      #   outputs[str(i)] = self.merge_levels(level, outputs[str(i)])
+      outputs[str(i)] = value
+
+    # down_merge
+    if not fpn_only:
+      for i in range(min_level, max_level):
+        outputs[str(i + 1)] = self.merge_levels(outputs[str(i)], outputs[str(i + 1)])
+
     return outputs
 
   @property

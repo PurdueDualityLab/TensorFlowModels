@@ -47,19 +47,23 @@ def build_tbifpn_decoder(
   decoder_cfg = model_config.decoder.get()
   norm_activation_config = model_config.norm_activation
 
-  activation = (
-      decoder_cfg.activation if decoder_cfg.activation != 'same' else
-      norm_activation_config.activation)
+  # activation = (
+  #     decoder_cfg.activation if decoder_cfg.activation != 'same' else
+  #     norm_activation_config.activation)
 
-  model = attention_fpn_blocks.TBiFPN(input_specs)
+  model = attention_fpn_blocks.TBiFPN(
+    input_specs,
+    fpn_only=decoder_cfg.fpn_only, 
+    repititions=decoder_cfg.repititions, 
+    window_size=decoder_cfg.window_size, 
+    token_size=decoder_cfg.token_size, 
+    )
   #   input_specs, 
   #   use_patch_expansion = decoder_cfg.use_patch_expansion, 
-  #   fpn_only=decoder_cfg.fpn_only, 
-  #   repititions=decoder_cfg.repititions, 
+
   #   include_detokenization=decoder_cfg.include_detokenization, 
   #   use_separable_conv=decoder_cfg.use_separable_conv, 
-  #   window_size=decoder_cfg.window_size, 
-  #   token_size=decoder_cfg.token_size, 
+
   #   mlp_ratio=decoder_cfg.mlp_ratio, 
   #   kernel_size=decoder_cfg.kernel_size, 
   #   use_sync_bn=norm_activation_config.use_sync_bn,

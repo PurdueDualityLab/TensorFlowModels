@@ -36,16 +36,8 @@ class TBiFPN(hyperparams.Config):
   """
   fpn_only: bool = False
   repititions: int = 1
-  include_detokenization: bool = True 
-  use_separable_conv: bool = True
   window_size: int = 8
   token_size: int  = 32
-  mlp_ratio: int  = 2
-  kernel_size: int = 1
-  activation: Optional[str] = 'mish'
-  use_patch_expansion: bool = False
-  shift: bool = False
-  expansion_kernel_size: bool = 1
 
 @dataclasses.dataclass
 class Decoder(decoders.Decoder):
