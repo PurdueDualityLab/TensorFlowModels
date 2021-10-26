@@ -695,9 +695,9 @@ class Tokenizer(tf.keras.layers.Layer):
     lp_impm = self.impm
 
     x = inputs[0]
-    x = x + lp_impa
+    #x = x + lp_impa
     x = self.projection(x) # 
-    x = x * lp_impm
+    #x = x * lp_impm
     return x, lp_impa, lp_impm
 
 class DeTokenizer(Tokenizer):
@@ -711,9 +711,9 @@ class DeTokenizer(Tokenizer):
     #   lp_impm = self.impm
 
     x = inputs[0]
-    x = x * lp_impm
+    #x = x * lp_impm
     x = self.projection(x)
-    x = x + lp_impa
+    #x = x + lp_impa
     return x
 
 class FFN(tf.keras.layers.Layer):
