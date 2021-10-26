@@ -687,12 +687,12 @@ class Tokenizer(tf.keras.layers.Layer):
     return 
   
   def call(self, inputs):
-    if self._merge_token_instructions:
-      lp_impa = self.impa_mlp(tf.concat([inputs[1], self.impa], axis = -1))
-      lp_impm = self.impa_mlp(tf.concat([inputs[2], self.impm], axis = -1))
-    else:
-      lp_impa = self.impa
-      lp_impm = self.impm
+    # if self._merge_token_instructions:
+    #   lp_impa = self.impa_mlp(tf.concat([inputs[1], self.impa], axis = -1))
+    #   lp_impm = self.impa_mlp(tf.concat([inputs[2], self.impm], axis = -1))
+    # else:
+    lp_impa = self.impa
+    lp_impm = self.impm
 
     x = inputs[0]
     x = x + lp_impa
@@ -703,12 +703,12 @@ class Tokenizer(tf.keras.layers.Layer):
 class DeTokenizer(Tokenizer):
   
   def call(self, inputs):
-    if self._merge_token_instructions:
-      lp_impa = self.impa_mlp(tf.concat([inputs[1], self.impa], axis = -1))
-      lp_impm = self.impa_mlp(tf.concat([inputs[2], self.impm], axis = -1))
-    else:
-      lp_impa = self.impa
-      lp_impm = self.impm
+    #if self._merge_token_instructions:
+    lp_impa = self.impa_mlp(tf.concat(inputs[1], axis = -1))
+    lp_impm = self.impa_mlp(tf.concat(inputs[2], axis = -1))
+    # else:
+    #   lp_impa = self.impa
+    #   lp_impm = self.impm
 
     x = inputs[0]
     x = x * lp_impm
