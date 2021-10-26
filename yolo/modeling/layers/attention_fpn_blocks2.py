@@ -684,6 +684,8 @@ class Tokenizer(tf.keras.layers.Layer):
         bias_initializer='zeros',
         bias_regularizer=None, 
       )
+
+    self.act = _get_activation_fn(self._activation)
     return 
   
   def call(self, inputs):
@@ -698,14 +700,16 @@ class Tokenizer(tf.keras.layers.Layer):
     #x = x + lp_impa
     x = self.projection(x) # 
     #x = x * lp_impm
-    return x, lp_impa, lp_impm
+    x = self.act(x)
+    return x, x, x #lp_impa, lp_impm
 
 class DeTokenizer(Tokenizer):
   
   def call(self, inputs):
     #if self._merge_token_instructions:
-    lp_impa = self.impa_mlp(tf.concat(inputs[1], axis = -1))
-    lp_impm = self.impa_mlp(tf.concat(inputs[2], axis = -1))
+    y = inputs[1]
+    # lp_impa = self.impa_mlp(tf.concat(inputs[1], axis = -1))
+    # lp_impm = self.impa_mlp(tf.concat(inputs[2], axis = -1))
     # else:
     #   lp_impa = self.impa
     #   lp_impm = self.impm
@@ -714,6 +718,7 @@ class DeTokenizer(Tokenizer):
     #x = x * lp_impm
     x = self.projection(x)
     #x = x + lp_impa
+    x = self.act(x) + y
     return x
 
 class FFN(tf.keras.layers.Layer):
@@ -949,7 +954,7 @@ class TBiFPN(tf.keras.Model):
     else:
       x, impa, impm = tokenizer([x, impa, impm])
 
-    x = self.activation(x)
+    # x = self.activation(x)
     return x, impa, impm
   
   def build_tokenizer(self, inputs):
@@ -968,7 +973,7 @@ class TBiFPN(tf.keras.Model):
     detokenizer = DeTokenizer(embedding_dims=self._embeding_dims)
     x = detokenizer([x, imp[0], imp[1]])
     x = self.squeeze_expand(x)
-    x = self.activation(x)
+    # x = self.activation(x)
     return x
   
   def build_detokenizer(self, inputs, imps):
