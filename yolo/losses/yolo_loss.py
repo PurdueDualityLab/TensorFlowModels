@@ -614,11 +614,14 @@ class AnchorFreeLoss(ScaledLoss):
     """Call iou function and use it to compute the loss for the box maps."""
     if self._loss_type == 'giou':
       iou, liou = box_ops.compute_giou(true_box, pred_box)
+      reg = liou - iou
     elif self._loss_type == 'ciou':
       iou, liou = box_ops.compute_ciou(true_box, pred_box, darknet=darknet)
+      reg = liou - iou
     else:
       liou = iou = box_ops.compute_iou(true_box, pred_box)
-    reg = liou - iou
+      reg = 0.0
+    
     loss_box = 1 - (tf.square(iou) + reg)
     return iou, liou, loss_box
 

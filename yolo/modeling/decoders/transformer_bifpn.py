@@ -21,7 +21,8 @@ from official.modeling import hyperparams
 
 import tensorflow as tf
 from yolo.modeling.layers import nn_blocks
-from yolo.modeling.layers import attention_fpn_blocks2 as attention_fpn_blocks
+# from yolo.modeling.layers import attention_fpn_blocks2 as attention_fpn_blocks
+from yolo.modeling.layers import attention_fpn_blocks3 as attention_fpn_blocks
 from official.vision.beta.modeling.decoders import factory
 
 

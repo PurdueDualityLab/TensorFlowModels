@@ -1,11 +1,11 @@
 runtime:
-  distribution_strategy: 'mirrored'
-  mixed_precision_dtype: 'float16'
-  num_gpus: 1
+  distribution_strategy: 'tpu'
+  mixed_precision_dtype: 'bfloat16'
+  tpu_enable_xla_dynamic_padder: True
 task:
   model:
-    input_size: [640, 640, 3]
-    # input_size: [608, 608, 3]
+    # input_size: [640, 640, 3]
+    input_size: [608, 608, 3]
     # input_size: [512, 512, 3]
     backbone:
       type: 'darknet'
@@ -17,16 +17,6 @@ task:
         depth_scale: 1.0
         width_scale: 0.75
         use_separable_conv: False
-    # backbone:
-    #   type: 'darknet'
-    #   darknet:
-    #     # model_id: 'cspdarknet53'
-    #     model_id: 'cspdarknettiny'
-    #     max_level: 5
-    #     min_level: 3
-    #     depth_scale: 1.0
-    #     width_scale: 2.0
-    #     use_separable_conv: False
     distinct_fpn:
       type: tbifpn_decoder
       tbifpn_decoder:
@@ -46,10 +36,9 @@ task:
       scale_xy:
         'all': 2.0
       max_boxes: 300
-      nms_type: greedy
-      iou_thresh: 0.25
-      nms_thresh: 0.45
-      pre_nms_points: 500
+      nms_type: iou
+      iou_thresh: 0.001
+      nms_thresh: 0.60
     loss:
       use_scaled_loss: true
       update_on_repeat: true
