@@ -1,7 +1,24 @@
 import tensorflow as tf
 import math
 
-def window_partition(x, window_size):
+# def window_partition(x, window_size):
+#   """
+#   Args:
+#     x: (B, H, W, C)
+#     window_size (int): window size
+
+#   Returns:
+#     windows: (num_windows*B, window_size, window_size, C)
+#   """
+#   _, H, W, C = x.shape
+#   if isinstance(window_size, int):
+#     window_size = (window_size, window_size)
+#   x = tf.reshape(x, [-1, H // window_size[0], window_size[0], W // window_size[1], window_size[1], C])
+#   x = tf.transpose(x, perm=(0, 1, 3, 2, 4, 5))
+#   x = tf.reshape(x, [-1, window_size[0], window_size[1], C])
+#   return x, H // window_size[0], W // window_size[1]
+
+def window_partition(x, window_size, preserve_patches = False):
   """
   Args:
     x: (B, H, W, C)
@@ -15,9 +32,13 @@ def window_partition(x, window_size):
     window_size = (window_size, window_size)
   x = tf.reshape(x, [-1, H // window_size[0], window_size[0], W // window_size[1], window_size[1], C])
   x = tf.transpose(x, perm=(0, 1, 3, 2, 4, 5))
-  x = tf.reshape(x, [-1, window_size[0], window_size[1], C])
+  if preserve_patches:
+    x = tf.reshape(x, [-1, (H // window_size[0]) * (W // window_size[1]), 
+                       window_size[0], window_size[1], C])
+  else:
+    x = tf.reshape(x, [-1, window_size[0], window_size[1], C])
   return x, H // window_size[0], W // window_size[1]
-
+  
 def window_reverse(x, window_size, H, W):
   """
   Args:
@@ -39,6 +60,8 @@ def window_reverse(x, window_size, H, W):
 
 def pad(x, window_size):
   _, H, W, C = x.shape
+  if isinstance(window_size, int):
+    window_size = (window_size, window_size)
   pad_l = pad_t = 0 
   pad_r = (window_size[1] - W % window_size[1]) % window_size[1]
   pad_b = (window_size[0] - H % window_size[0]) % window_size[0]  
