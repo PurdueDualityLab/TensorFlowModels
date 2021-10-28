@@ -546,10 +546,10 @@ class SpatialIdentitySelfAttention(tf.keras.layers.Layer):
     q, k, v = self.qkv_projection(x)
 
     identity_attn = self.call_spatial(q, k, v, training = training) # identity onto spatial 
-    spatial_attn = self.call_identity(q, k, v, training = training)
-    attn_windows = identity_attn + spatial_attn 
+    # spatial_attn = self.call_identity(q, k, v, training = training)
+    # attn_windows = identity_attn + spatial_attn 
 
-    # attn_windows = self.call_identity(q + identity_attn, k, v, training = training) # spatial onto identity
+    attn_windows = self.call_identity(q + identity_attn, k, v, training = training) # spatial onto identity
     
     attn = window_reverse(attn_windows, self._window_size, Hp, Wp)
     q = window_reverse(q, self._window_size, Hp, Wp)
@@ -1534,219 +1534,8 @@ class TBiFPN(tf.keras.Model):
                 norm_momentum = 0.97,
                 norm_epsilon = 0.001)(x)
 
-  # # upsample self attention
-  # def merge_levels(self, source, query, oquery = None):
-  #   num_heads = query.shape[-1]//self._token_size
-  #   exp_features = query.shape[-1]
-    
-  #   sample_size = query.shape[1]/source.shape[1]
-  #   source_window_size = self._window_size
-
-  #   if sample_size > 1:
-  #     sample_size = int(sample_size)
-  #     upsample = True
-  #   elif sample_size < 1:
-  #     sample_size = int(source.shape[1]/query.shape[1])
-  #     query_window_size = int(self._window_size * sample_size)
-  #     query_window_size, source_window_size = source_window_size, query_window_size
-  #     upsample = False
-  #   else:
-  #     upsample = None
-
-  #   attention = ShiftedWindowSelfAttention( 
-  #     source_window_size, 
-  #     shift = False, 
-  #     num_heads = num_heads, 
-  #     kernel_size = 1, 
-  #     use_separable_conv = False, 
-  #     qkv_bias=True, 
-  #     qk_scale=None, 
-  #     project_attention = False,
-  #   )
-
-  #   if upsample == True:
-  #     source = tf.keras.layers.UpSampling2D(sample_size)(source)
-  #   elif upsample == False:
-  #     source = self.dw_conv(source, sample_size)
-  #   else:
-  #     source = source
-
-  #   source = self.conv(source, exp_features)
-  #   x = query + source
-
-  #   ns = self.layer_norm(x)
-  #   x = attention(ns) + x 
-  #   x = self.ffn(x)
-  #   return x
-  
-  # # upsample mapping 
-  # def merge_levels(self, source, query, oquery = None):
-  #   num_heads = query.shape[-1]//self._token_size
-  #   exp_features = query.shape[-1]
-    
-  #   sample_size = query.shape[1]/source.shape[1]
-  #   query_window_size = int(self._window_size * sample_size)
-  #   source_window_size = self._window_size
-
-  #   if sample_size > 1:
-  #     sample_size = int(sample_size)
-  #     upsample = True
-  #   elif sample_size < 1:
-  #     sample_size = int(source.shape[1]/query.shape[1])
-  #     query_window_size = int(self._window_size * sample_size)
-  #     query_window_size, source_window_size = source_window_size, query_window_size
-  #     upsample = False
-  #   else:
-  #     upsample = None
-
-  #   attention = ShiftedWindowAttention(
-  #     query_window_size, 
-  #     source_window_size, 
-  #     shift = False, 
-  #     num_heads = num_heads, 
-  #     kernel_size = 1, 
-  #     use_separable_conv = False, 
-  #     qkv_bias=True, 
-  #     qk_scale=None, 
-  #     project_attention = False,
-  #   )
-
-  #   source = self.conv(source, exp_features)
-
-  #   nq = self.layer_norm(query)
-  #   ns = self.layer_norm(source)
-  #   x = attention([nq, ns])
-
-  #   if upsample == True:
-  #     source = tf.keras.layers.UpSampling2D(sample_size)(source)
-  #   elif upsample == False:
-  #     source = self.dw_conv(source, sample_size)
-  #   else:
-  #     source = source
-  #   return self.ffn(x + source)
-
-  # # upsample mapping 
-  # def merge_levels(self, source, query, oquery = None):
-  #   num_heads = query.shape[-1]//self._token_size
-  #   exp1_features = query.shape[-1]
-  #   exp2_features = source.shape[-1]
-    
-  #   sample_size = query.shape[1]/source.shape[1]
-  #   query_window_size = int(self._window_size * sample_size)
-  #   source_window_size = self._window_size
-
-  #   if sample_size > 1:
-  #     sample_size = int(sample_size)
-  #     upsample = True
-  #   elif sample_size < 1:
-  #     sample_size = int(source.shape[1]/query.shape[1])
-  #     query_window_size = int(self._window_size * sample_size)
-  #     query_window_size, source_window_size = source_window_size, query_window_size
-  #     upsample = False
-  #   else:
-  #     upsample = None
-
-  #   attention = ShiftedWindowAttention(
-  #     query_window_size, 
-  #     source_window_size, 
-  #     shift = False, 
-  #     num_heads = num_heads, 
-  #     kernel_size = 1, 
-  #     use_separable_conv = False, 
-  #     qkv_bias=True, 
-  #     qk_scale=None, 
-  #     project_attention = False,
-  #   )
-  #   attention_i = WindowedIdentityAttention(
-  #     query_window_size, 
-  #     num_heads = num_heads, 
-  #     qkv_bias=True, 
-  #     qk_scale=None, 
-  #     project_attention = False,
-  #   )
-
-  #   if exp1_features != exp2_features:
-  #     query = self.conv(query, exp2_features)
-
-  #   nq = self.layer_norm(query)
-  #   ns = self.layer_norm(source)
-  #   x = attention([nq, ns])
-    
-  #   # # config one 
-  #   if upsample == True:
-  #     source = tf.keras.layers.UpSampling2D(sample_size)(source)
-  #   elif upsample == False:
-  #     source = self.dw_conv(source, sample_size)
-  #   else:
-  #     source = source
-
-  #   ns = self.layer_norm(source)
-  #   x1, _ = attention_i([ns, nq])
-
-  #   x = tf.keras.layers.Add()([x, x1, source])
-
-  #   # config 2 and 3
-  #   # x = tf.keras.layers.Add()([x, query])
-  #   return self.ffn(x, output_features=exp1_features)
-
-  # # upsample mapping 
-  # def merge_levels(self, source, query, oquery = None):
-  #   num_heads = query.shape[-1]//self._token_size
-  #   exp1_features = query.shape[-1]
-  #   exp2_features = source.shape[-1]
-    
-  #   sample_size = query.shape[1]/source.shape[1]
-  #   query_window_size = int(self._window_size * sample_size)
-  #   source_window_size = self._window_size
-
-  #   if sample_size > 1:
-  #     sample_size = int(sample_size)
-  #     upsample = True
-  #   elif sample_size < 1:
-  #     sample_size = int(source.shape[1]/query.shape[1])
-  #     query_window_size = int(self._window_size * sample_size)
-  #     query_window_size, source_window_size = source_window_size, query_window_size
-  #     upsample = False
-  #   else:
-  #     upsample = None
-
-  #   # attention = ShiftedWindowSelfAttention(
-  #   #   source_window_size, 
-  #   #   shift = False, 
-  #   #   num_heads = num_heads, 
-  #   #   kernel_size = 1, 
-  #   #   use_separable_conv = False, 
-  #   #   qkv_bias=True, 
-  #   #   qk_scale=None, 
-  #   #   project_attention = False,
-  #   # )
-
-  #   attention = WindowedIdentityAttention(
-  #     query_window_size, 
-  #     num_heads = num_heads, 
-  #     qkv_bias=True, 
-  #     qk_scale=None, 
-  #     project_attention = False,
-  #   )
-
-  #   if exp1_features != exp2_features:
-  #     query = self.conv(query, exp2_features)
-
-  #   if upsample == True:
-  #     source = tf.keras.layers.UpSampling2D(sample_size)(source)
-  #   elif upsample == False:
-  #     source = self.dw_conv(source, sample_size)
-  #   else:
-  #     source = source
-  #   x = tf.keras.layers.Add()([query, source])
-  #   x = self.conv(x, exp2_features)
-
-  #   x = self.layer_norm(x)
-  #   x = x + attention([x, x])
-  #   return self.ffn(x, output_features=exp1_features)
-
   # upsample mapping 
-  def merge_levels(self, source, query, oquery = None):
+  def merge_levels(self, source, query, oquery = None, fpn_only = False):
     num_heads = query.shape[-1]//self._token_size
     exp1_features = query.shape[-1]
     exp2_features = source.shape[-1]
@@ -1777,18 +1566,6 @@ class TBiFPN(tf.keras.Model):
       qk_scale=None, 
     )
 
-    # attention_dw = ShiftedWindowAttention(
-    #   query_window_size, 
-    #   query_window_size, 
-    #   shift = False, 
-    #   num_heads = num_heads, 
-    #   kernel_size = 1, 
-    #   use_separable_conv = False, 
-    #   qkv_bias=True, 
-    #   qk_scale=None, 
-    #   project_attention = False,
-    # )
-
     if exp1_features != exp2_features:
       query = self.conv(query, exp2_features)
 
@@ -1801,9 +1578,11 @@ class TBiFPN(tf.keras.Model):
 
     x = tf.keras.layers.Add()([source, query])
     x = attention(x)
-    # return self.conv(x, exp1_features) #
-    # return x
-    return self.ffn(x, output_features=exp1_features)
+
+    if fpn_only:
+      return x #self.conv(x, exp1_features)
+    else:
+      return self.ffn(x, output_features=exp1_features)
 
   def build_merging(self, inputs, fpn_only):
     outputs = inputs
@@ -1811,21 +1590,17 @@ class TBiFPN(tf.keras.Model):
     max_level = int(max(outputs.keys()))
 
     if fpn_only:
-      outputs[str(max_level)] = self.merge_levels(outputs[str(max_level)], outputs[str(max_level)])
+      outputs[str(max_level)] = self.merge_levels(outputs[str(max_level)], outputs[str(max_level)], fpn_only = fpn_only)
       
     #up_merge
     for i in reversed(range(min_level, max_level)):
-      level = outputs[str(i)]
-      value = self.merge_levels(outputs[str(i + 1)], outputs[str(i)])
-      # if i != min_level and i != max_level:
-      #   print("here", i)
-      #   outputs[str(i)] = self.merge_levels(level, outputs[str(i)])
+      value = self.merge_levels(outputs[str(i + 1)], outputs[str(i)], fpn_only = fpn_only)
       outputs[str(i)] = value
 
     # down_merge
     if not fpn_only:
       for i in range(min_level, max_level):
-        outputs[str(i + 1)] = self.merge_levels(outputs[str(i)], outputs[str(i + 1)])
+        outputs[str(i + 1)] = self.merge_levels(outputs[str(i)], outputs[str(i + 1)], fpn_only = fpn_only)
 
 
     return outputs
