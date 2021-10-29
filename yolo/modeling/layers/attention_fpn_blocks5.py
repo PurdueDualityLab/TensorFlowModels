@@ -646,26 +646,26 @@ class Tokenizer(tf.keras.layers.Layer):
     conv_shape = input_shapes[0]
     num_elements = self._embedding_dims or conv_shape[-1] 
 
-    if len(input_shapes) == 3:
-      self._merge_token_instructions = True
-      self.impa_mlp = TokenizerMlp(num_elements)
-      self.impm_mlp = TokenizerMlp(num_elements)
-    else:
-      self._merge_token_instructions = False
+    # if len(input_shapes) == 3:
+    #   self._merge_token_instructions = True
+    #   self.impa_mlp = TokenizerMlp(num_elements)
+    #   self.impm_mlp = TokenizerMlp(num_elements)
+    # else:
+    #   self._merge_token_instructions = False
 
     # learned keys indicating HOW the tokenization is to be done
     # each tokenizer gets its own but also needs to account for how the 
     # other levels were tokenized, each channel gets a tokenization key
-    self.impa = self.add_weight(
-      name = '{}_tokenization_key_shift'.format(self.name),
-      shape = [1, 1, 1, num_elements], 
-      initializer = "TruncatedNormal", 
-    )
-    self.impm = self.add_weight(
-      name = '{}_tokenization_key_scale'.format(self.name),
-      shape = [1, 1, 1, num_elements], 
-      initializer = "TruncatedNormal", 
-    )
+    # self.impa = self.add_weight(
+    #   name = '{}_tokenization_key_shift'.format(self.name),
+    #   shape = [1, 1, 1, num_elements], 
+    #   initializer = "TruncatedNormal", 
+    # )
+    # self.impm = self.add_weight(
+    #   name = '{}_tokenization_key_scale'.format(self.name),
+    #   shape = [1, 1, 1, num_elements], 
+    #   initializer = "TruncatedNormal", 
+    # )
 
     self.projection = nn_blocks.ConvBN( # after shift, project the channels to similar arangement 
         filters = num_elements,
@@ -694,8 +694,8 @@ class Tokenizer(tf.keras.layers.Layer):
     #   lp_impa = self.impa_mlp(tf.concat([inputs[1], self.impa], axis = -1))
     #   lp_impm = self.impa_mlp(tf.concat([inputs[2], self.impm], axis = -1))
     # else:
-    lp_impa = self.impa
-    lp_impm = self.impm
+    # lp_impa = self.impa
+    # lp_impm = self.impm
 
     x = inputs[0]
     #x = x + lp_impa

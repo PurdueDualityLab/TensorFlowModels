@@ -23,7 +23,7 @@ task:
       tbifpn_decoder:
         repititions: 1
         window_size: 8
-        token_size: 64
+        token_size: 32
     decoder:
       type: yolo_decoder
       yolo_decoder:
