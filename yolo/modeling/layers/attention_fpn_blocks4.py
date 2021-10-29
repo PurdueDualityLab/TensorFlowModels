@@ -379,11 +379,11 @@ class SpatialIdentitySelfAttention(tf.keras.layers.Layer):
                               kernel_regularizer=None,
                               bias_initializer='zeros',
                               bias_regularizer=None)
-    self.bn = tf.keras.layers.BatchNormalization(
-      momentum = 0.97,
-      epsilon = 0.0001,
-    )
-    self.act = _get_activation_fn(self._activation)
+    # self.bn = tf.keras.layers.BatchNormalization(
+    #   momentum = 0.97,
+    #   epsilon = 0.0001,
+    # )
+    # self.act = _get_activation_fn(self._activation)
 
     filters_a = self._filters_a or input_shape[-1] #* 0.5
     self.qkv = nn_blocks.ConvBN(
@@ -468,8 +468,8 @@ class SpatialIdentitySelfAttention(tf.keras.layers.Layer):
   def spatial_projection(self, x):
     # across patches
     x = self.dw(x)
-    x = self.bn(x)
-    x = self.act(x)
+    # x = self.bn(x)
+    # x = self.act(x)
     return x
 
   def qkv_projection(self, x):
