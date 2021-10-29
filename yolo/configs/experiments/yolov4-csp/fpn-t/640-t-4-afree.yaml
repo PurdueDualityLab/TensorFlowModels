@@ -6,9 +6,7 @@ task:
   smart_bias_lr: 0.1
   model:
     darknet_based_model: False
-    # input_size: [640, 640, 3]
     input_size: [608, 608, 3]
-    # input_size: [512, 512, 3]
     backbone:
       type: 'darknet'
       darknet:
@@ -21,6 +19,7 @@ task:
     distinct_fpn:
       type: tbifpn_decoder
       tbifpn_decoder:
+        fpn_only: false
         repititions: 1
         window_size: 8
         token_size: 32
@@ -57,7 +56,7 @@ task:
       objectness_smooth: 
         'all': 0.0
     norm_activation:
-      activation: swish
+      activation: mish
       norm_epsilon: 0.0001
       norm_momentum: 0.97
       use_sync_bn: true
