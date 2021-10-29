@@ -29,7 +29,7 @@ task:
       yolo_decoder:
         version: v3
         type: spp
-        path_process_len: 6
+        path_process_len: 4
     head:
       smart_bias: true
     detection_generator:
