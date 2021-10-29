@@ -56,7 +56,7 @@ task:
       # anchors_per_scale: 1
       # level_limits: [64, 96, 128, 192, 256]
       # anchors_per_scale: 2
-      level_limits: [32, 64, 96, 128, 160, 192, 224, 256]
+      level_limits: [21.33, 42.66, 64, 85.333, 106.666, 128, 224, 256]
       anchors_per_scale: 3
   train_data:
     global_batch_size: 64

@@ -31,7 +31,7 @@ task:
       type: tbifpn_decoder
       tbifpn_decoder:
         fpn_only: true
-        window_size: null
+        window_size: 19
     decoder:
       type: yolo_decoder
       yolo_decoder:
@@ -46,7 +46,7 @@ task:
       scale_xy:
         'all': 2.0
       max_boxes: 300
-      nms_type: greedy
+      nms_type: tflite
       iou_thresh: 0.25
       nms_thresh: 0.45
       pre_nms_points: 500

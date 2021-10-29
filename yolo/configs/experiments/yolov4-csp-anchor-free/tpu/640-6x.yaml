@@ -51,7 +51,7 @@ task:
       use_sync_bn: true
     num_classes: 80
     anchor_boxes:
-      level_limits: [32, 64, 96, 128, 160, 192, 224, 256]
+      level_limits: [21.33, 42.66, 64, 128, 160, 192, 224, 256]
       anchors_per_scale: 3
   train_data:
     global_batch_size: 64

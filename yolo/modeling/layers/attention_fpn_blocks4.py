@@ -590,7 +590,6 @@ class SpatialIdentitySelfAttention(tf.keras.layers.Layer):
     x = self.spatial_projection(x)
 
     x, H, W, C, Hp, Wp = pad(x, self._window_size)
-    # x, pH, pW = window_partition(x, self._window_size)
     q, k, v, P = self.qkv_projection(x)
 
 

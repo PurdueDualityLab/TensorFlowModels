@@ -204,11 +204,12 @@ class YoloAnchorLabeler:
         base = k 
         for j, lst in enumerate(self.anchors[key]):
           # level_limits_dict[key].append(level_limits[k:k + 2])
-          if not self.use_tie_breaker:
+          if self.use_tie_breaker:
             base = k
           level_limits_dict[key].append([level_limits[base], level_limits[k + 1]])
           k += 1
         level_limits_dict[key] = tf.convert_to_tensor(level_limits_dict[key])
+        print(level_limits_dict)
     else:
       level_limits_dict = None
     return level_limits_dict
