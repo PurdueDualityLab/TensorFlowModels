@@ -1571,12 +1571,13 @@ class TBiFPN(tf.keras.Model):
 
     if upsample == True:
       source = tf.keras.layers.UpSampling2D(sample_size)(source)
+      x = tf.keras.layers.Add()([source, query])
     elif upsample == False:
       source = self.dw_conv(source, sample_size)
+      x = tf.keras.layers.Add()([source, query])
     else:
-      source = source
-
-    x = tf.keras.layers.Add()([source, query])
+      x = source
+    
     x = attention(x)
 
     if fpn_only:
