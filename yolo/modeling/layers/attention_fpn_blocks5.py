@@ -1234,7 +1234,8 @@ class TBiFPN(tf.keras.Model):
     # down_merge
     if not fpn_only:
       for i in range(min_level, max_level):
-        outputs[str(i + 1)] = self.merge_levels(outputs[str(i)], outputs[str(i + 1)])
+        # outputs[str(i + 1)] = self.merge_levels(outputs[str(i)], outputs[str(i + 1)])
+        outputs[str(i + 1)] = self.merge_levels_down(outputs[str(i)], outputs[str(i + 1)])
 
 
     return outputs
