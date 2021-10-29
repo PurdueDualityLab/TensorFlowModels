@@ -431,6 +431,14 @@ class SpatialIdentitySelfAttention(tf.keras.layers.Layer):
       regularizer = self._relative_bias_regularizer, 
       trainable = True)
 
+    # num_elements = (qWh + kWh - 1) * (qWw + kWw - 1)
+    # self._realtive_positional_bias_table2 = self.add_weight(
+    #   name = '{}_realtive_positional_bias_table'.format(self.name), 
+    #   shape = [filters_a, self._num_heads], 
+    #   initializer = self._relative_bias_initializer, 
+    #   regularizer = self._relative_bias_regularizer, 
+    #   trainable = True)
+
     # get the postions to associate the above bais table with    
     coords_h = np.arange(qWh)
     coords_w = np.arange(qWw)
@@ -471,7 +479,7 @@ class SpatialIdentitySelfAttention(tf.keras.layers.Layer):
     qkv = self.qkv(x)
     _, H, W, C = qkv.shape
     qkv =  tf.reshape(qkv, [-1, H, W, 3, C//3])
-    return qkv[..., 0, :], qkv[..., 1, :], qkv[..., 2, :]
+    return qkv[..., 0, :], qkv[..., 1, :], qkv[..., 2, :], pH*pW
   
   def reshape_identity_projection(self, x, N, C):
     x = tf.reshape(x, [-1, N, self._num_heads, C // self._num_heads])
@@ -483,6 +491,11 @@ class SpatialIdentitySelfAttention(tf.keras.layers.Layer):
     x = tf.transpose(x, perm=(0, 2, 1, 3))
     return x
 
+  def reshape_cross_projection(self, x, P, N, C):
+    x = tf.reshape(x, [-1, P, N, C])
+    x = tf.transpose(x, perm=(0, 3, 2, 1))
+    return x
+
   def get_indexed_bias(self):
     # compute the relative poisiton bias
     num_elems_q = self._window_size_q[0] * self._window_size_q[1]
@@ -492,6 +505,41 @@ class SpatialIdentitySelfAttention(tf.keras.layers.Layer):
     relative_position_bias = tf.reshape(relative_position_bias, [num_elems_q, num_elems_k, -1]) # Wh*Ww,Wh*Ww,nH
     relative_position_bias = tf.transpose(relative_position_bias, perm=(2, 0, 1)) # nH, Wh*Ww, Wh*Ww
     return tf.expand_dims(relative_position_bias, axis = 0)
+
+  # def get_indexed_bias2(self):
+  #   # compute the relative poisiton bias
+  #   num_elems_q = self._window_size_q[0] * self._window_size_q[1]
+  #   num_elems_k = self._window_size_k[0] * self._window_size_k[1]
+  #   indexes = tf.reshape(self._relative_positional_indexes, [-1])
+  #   relative_position_bias = tf.gather(self._realtive_positional_bias_table2, indexes)
+  #   relative_position_bias = tf.reshape(relative_position_bias, [num_elems_q, num_elems_k, -1]) # Wh*Ww,Wh*Ww,nH
+  #   relative_position_bias = tf.transpose(relative_position_bias, perm=(2, 0, 1)) # nH, Wh*Ww, Wh*Ww
+  #   return tf.expand_dims(relative_position_bias, axis = 0)
+
+  def call_cross_patch(self, q, k, v, P, training = None):
+    _, qWh, qWw, C = q.shape
+    qN = qWh * qWw 
+    _, kWh, kWw, C = k.shape
+    kN = kWh * kWw 
+    q = self.reshape_cross_projection(q, P, qN, C)
+    k = self.reshape_cross_projection(k, P, kN, C)
+    v = self.reshape_cross_projection(v, P, kN, C)
+
+    q = q * self.scale
+    attn = tf.matmul(q, k, transpose_b = True)
+
+    # compute the relative poisiton bias
+    relative_position_bias = self.get_indexed_bias2()
+    attn = attn + relative_position_bias
+
+    attn = self.act(attn)
+    if training:
+      attn = self.attn_drop(attn)
+
+    x = tf.matmul(attn, v)
+    x = tf.transpose(x, perm = (0, 3, 2, 1)) # move heads to be merged with features
+    x = tf.reshape(x, [-1, qWh, qWw, C])
+    return x
 
   def call_spatial(self, q, k, v, training = None):
     _, qWh, qWw, C = q.shape
@@ -543,8 +591,10 @@ class SpatialIdentitySelfAttention(tf.keras.layers.Layer):
 
     x, H, W, C, Hp, Wp = pad(x, self._window_size)
     # x, pH, pW = window_partition(x, self._window_size)
-    q, k, v = self.qkv_projection(x)
+    q, k, v, P = self.qkv_projection(x)
 
+
+    #cross_patch_attn = self.call_cross_patch(q, k, v, P, training = training) # identity onto spatial 
     identity_attn = self.call_spatial(q, k, v, training = training) # identity onto spatial 
     # spatial_attn = self.call_identity(q, k, v, training = training)
     # attn_windows = identity_attn + spatial_attn 
@@ -1176,26 +1226,26 @@ class Tokenizer(tf.keras.layers.Layer):
     conv_shape = input_shapes[0]
     num_elements = self._embedding_dims or conv_shape[-1] 
 
-    if len(input_shapes) == 3:
-      self._merge_token_instructions = True
-      self.impa_mlp = TokenizerMlp(num_elements)
-      self.impm_mlp = TokenizerMlp(num_elements)
-    else:
-      self._merge_token_instructions = False
+    # if len(input_shapes) == 3:
+    #   self._merge_token_instructions = True
+    #   self.impa_mlp = TokenizerMlp(num_elements)
+    #   self.impm_mlp = TokenizerMlp(num_elements)
+    # else:
+    #   self._merge_token_instructions = False
 
     # learned keys indicating HOW the tokenization is to be done
     # each tokenizer gets its own but also needs to account for how the 
     # other levels were tokenized, each channel gets a tokenization key
-    self.impa = self.add_weight(
-      name = '{}_tokenization_key_shift'.format(self.name),
-      shape = [1, 1, 1, num_elements], 
-      initializer = "TruncatedNormal", 
-    )
-    self.impm = self.add_weight(
-      name = '{}_tokenization_key_scale'.format(self.name),
-      shape = [1, 1, 1, num_elements], 
-      initializer = "TruncatedNormal", 
-    )
+    # self.impa = self.add_weight(
+    #   name = '{}_tokenization_key_shift'.format(self.name),
+    #   shape = [1, 1, 1, num_elements], 
+    #   initializer = "TruncatedNormal", 
+    # )
+    # self.impm = self.add_weight(
+    #   name = '{}_tokenization_key_scale'.format(self.name),
+    #   shape = [1, 1, 1, num_elements], 
+    #   initializer = "TruncatedNormal", 
+    # )
 
     self.projection = nn_blocks.ConvBN( # after shift, project the channels to similar arangement 
         filters = num_elements,
@@ -1224,8 +1274,8 @@ class Tokenizer(tf.keras.layers.Layer):
     #   lp_impa = self.impa_mlp(tf.concat([inputs[1], self.impa], axis = -1))
     #   lp_impm = self.impa_mlp(tf.concat([inputs[2], self.impm], axis = -1))
     # else:
-    lp_impa = self.impa
-    lp_impm = self.impm
+    # lp_impa = self.impa
+    # lp_impm = self.impm
 
     x = inputs[0]
     #x = x + lp_impa
@@ -1490,7 +1540,7 @@ class TBiFPN(tf.keras.Model):
     else:
       x, impa, impm = tokenizer([x, impa, impm])
 
-    # x = self.activation(x)
+    # x = self.merge_levels(x, x, fpn_only = True)
     return x, impa, impm
   
   def build_tokenizer(self, inputs):
@@ -1590,9 +1640,12 @@ class TBiFPN(tf.keras.Model):
     min_level = int(min(outputs.keys()))
     max_level = int(max(outputs.keys()))
 
-    if fpn_only:
-      outputs[str(max_level)] = self.merge_levels(outputs[str(max_level)], outputs[str(max_level)], fpn_only = fpn_only)
-      
+    # if fpn_only:
+    #   outputs[str(max_level)] = self.merge_levels(outputs[str(max_level)], outputs[str(max_level)], fpn_only = fpn_only)
+
+
+    outputs[str(max_level)] = self.merge_levels(outputs[str(max_level)], outputs[str(max_level)], fpn_only = True)
+
     #up_merge
     for i in reversed(range(min_level, max_level)):
       value = self.merge_levels(outputs[str(i + 1)], outputs[str(i)], fpn_only = fpn_only)
