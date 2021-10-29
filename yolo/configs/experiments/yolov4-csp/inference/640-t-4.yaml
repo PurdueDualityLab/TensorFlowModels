@@ -65,10 +65,13 @@ task:
         'all': 1.0
     num_classes: 80
     anchor_boxes:
+      level_limits: [21.33, 42.66, 64, 128, 160, 192, 224, 256]
       anchors_per_scale: 3
-      boxes: [box: [12, 16],   box: [19, 36],   box: [40, 28], 
-              box: [36, 75],   box: [76, 55],   box: [72, 146], 
-              box: [142, 110], box: [192, 243], box: [459, 401]]
+    # anchor_boxes:
+    #   anchors_per_scale: 3
+    #   boxes: [box: [12, 16],   box: [19, 36],   box: [40, 28], 
+    #           box: [36, 75],   box: [76, 55],   box: [72, 146], 
+    #           box: [142, 110], box: [192, 243], box: [459, 401]]
   train_data:
     global_batch_size: 4
     input_path:  '/media/vbanna/DATA_SHARE/CV/datasets/COCO_raw/records/train*'
