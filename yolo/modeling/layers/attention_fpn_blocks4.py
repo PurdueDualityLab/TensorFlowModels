@@ -596,11 +596,12 @@ class SpatialIdentitySelfAttention(tf.keras.layers.Layer):
 
     #cross_patch_attn = self.call_cross_patch(q, k, v, P, training = training) # identity onto spatial 
     identity_attn = self.call_spatial(q, k, v, training = training) # identity onto spatial 
-    # spatial_attn = self.call_identity(q, k, v, training = training)
-    # attn_windows = identity_attn + spatial_attn 
+    spatial_attn = self.call_identity(q, k, v, training = training)
+    attn_windows = identity_attn + spatial_attn 
 
-    attn_windows = self.call_identity(q + identity_attn, k, v, training = training) # spatial onto identity
+    # attn_windows = self.call_identity(q + identity_attn, k, v, training = training) # spatial onto identity
     
+    # attn_windows = self.call_spatial(q, k, v, training = training) # identity onto spatial 
     attn = window_reverse(attn_windows, self._window_size, Hp, Wp)
     q = window_reverse(q, self._window_size, Hp, Wp)
 
