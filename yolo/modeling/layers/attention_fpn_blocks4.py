@@ -395,7 +395,7 @@ class SpatialIdentitySelfAttention(tf.keras.layers.Layer):
       use_bias = self._qkv_bias,
       use_bn = False, 
       activation = None, #self._activation, 
-      use_separable_conv = True, #self._use_separable_conv, 
+      use_separable_conv = False, #self._use_separable_conv, 
       **self._init_args
     )
     self.ln_qkv = LayerNorm()
@@ -587,7 +587,7 @@ class SpatialIdentitySelfAttention(tf.keras.layers.Layer):
     return x
 
   def call(self, x, training = None):
-    x_og = self.spatial_projection(x)
+    x = self.spatial_projection(x)
 
     x, H, W, C, Hp, Wp = pad(x, self._window_size)
     # x, pH, pW = window_partition(x, self._window_size)
