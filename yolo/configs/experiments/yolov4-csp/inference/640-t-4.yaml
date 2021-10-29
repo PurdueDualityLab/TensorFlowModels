@@ -6,8 +6,8 @@ task:
   smart_bias_lr: 0.1
   model:
     darknet_based_model: False
-    # input_size: [640, 640, 3]
-    input_size: [608, 608, 3]
+    input_size: [640, 640, 3]
+    # input_size: [608, 608, 3]
     # input_size: [512, 512, 3]
     backbone:
       type: 'darknet'
@@ -21,9 +21,10 @@ task:
     distinct_fpn:
       type: tbifpn_decoder
       tbifpn_decoder:
+        fpn_only: false
         repititions: 1
         window_size: 8
-        token_size: 64
+        token_size: 32
     decoder:
       type: yolo_decoder
       yolo_decoder:
