@@ -82,38 +82,4 @@ task:
       aug_rand_translate: 0.1
       area_thresh: 0.1
   validation_data:
-    global_batch_size: 8
     input_path: 'gs://cam2-datasets/coco/val*'
-trainer:
-  train_steps: 555000 # 160 epochs at 64 batchsize -> 500500 * 64/2
-  validation_steps: 625
-  steps_per_loop: 1850
-  summary_interval: 1850
-  validation_interval: 1850
-  checkpoint_interval: 1850
-  optimizer_config:
-    ema:
-      average_decay: 0.9999
-      trainable_weights_only: False
-      dynamic_decay: True
-    learning_rate:
-      type: cosine
-      cosine:
-        initial_learning_rate: 0.01
-        name: Cosine
-        alpha: 0.2
-        decay_steps: 555000
-    optimizer:
-      type: sgd_torch
-      sgd_torch:
-        momentum: 0.9
-        momentum_start: 0.8
-        nesterov: True
-        warmup_steps: 9250
-        weight_decay: 0.0005
-        sim_torch: true
-        name: SGD
-    warmup:
-      type: 'linear'
-      linear:
-        warmup_steps: 9250 #learning rate rises from 0 to 0.0013 over 1000 steps
