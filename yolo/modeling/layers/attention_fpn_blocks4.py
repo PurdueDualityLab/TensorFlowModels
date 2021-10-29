@@ -1247,8 +1247,8 @@ class DeTokenizer(Tokenizer):
 
     x = inputs[0]
 
-    x = x + y
-    #x = x * lp_impm
+    # x = x + y
+    # x = x * lp_impm
     x = self.projection(x)
     #x = x + lp_impa
     x = self.act(x)
