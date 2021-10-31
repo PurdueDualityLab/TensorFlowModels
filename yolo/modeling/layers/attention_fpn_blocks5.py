@@ -1225,7 +1225,8 @@ class TBiFPN(tf.keras.Model):
     #up_merge
     for i in reversed(range(min_level, max_level)):
       level = outputs[str(i)]
-      value = self.merge_levels(outputs[str(i + 1)], outputs[str(i)])
+      # value = self.merge_levels(outputs[str(i + 1)], outputs[str(i)])
+      value = self.merge_levels_down(outputs[str(i + 1)], outputs[str(i)])
       # if i != min_level and i != max_level:
       #   print("here", i)
       #   outputs[str(i)] = self.merge_levels(level, outputs[str(i)])
