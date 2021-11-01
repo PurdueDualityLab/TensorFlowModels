@@ -16,8 +16,8 @@
 """Yolox heads."""
 
 import tensorflow as tf
-from keras.models import Sequential
-from keras.layers import Conv2D, DepthwiseConv2D
+# from keras.models import Sequential
+# from keras.layers import Conv2D, DepthwiseConv2D
 from torch.nn.modules.conv import Conv2d
 
 from yolo.modeling.layers import nn_blocks
@@ -50,25 +50,30 @@ class YOLOXHead(tf.keras.layers.Layer):
     self._num_classes = num_classes
     self._decode_in_inference = True
 
-    self._cls_conv = tf.keras.Sequential()
-    self._reg_conv = tf.keras.Sequential()
+    self._cls_conv = []
+    self._reg_conv = []
     
-    self._cls_pred = tf.keras.Sequential()
-    self._reg_preds = tf.keras.Sequential()
-    self._obj_preds = tf.keras.Sequential()
+    self._cls_pred = []
+    self._reg_preds = []
+    self._obj_preds = []
 
-    self._stems = tf.keras.Sequential()
+    self._stems = []
     # TODO if there is no BaseConv, we need to define that.
     # Conv = tf.keras.Sequential()
     # Conv = DepthwiseConv2D if depthwise else BaseConv 
     for i in range(len(in_channels)):
-      # self.stems.append(
-      #   BaseConv (
+      self._stems.append(
+        nn_blocks.ConvBN(
+          filters=int(256 * width),
+          kernel_size=1,
+          strides=(1, 1),
+          padding='same', # TODO
+          use_bn = True,
+          activation=act,
+        ),
+      )
 
-      #   )
-      # )
-
-      self._cls_conv.add (
+      self._cls_conv.append (
         nn_blocks.ConvBN(
           filters=int(256 * width),
           kernel_size=3,
@@ -78,7 +83,7 @@ class YOLOXHead(tf.keras.layers.Layer):
           activation=act,
         ),
       )
-      self._cls_conv.add(
+      self._cls_conv.append(
         nn_blocks.ConvBN(
           filters=int(256 * width),
           kernel_size=3,
@@ -90,7 +95,7 @@ class YOLOXHead(tf.keras.layers.Layer):
       )
     
 
-      self._reg_conv.add(
+      self._reg_conv.append(
         nn_blocks.ConvBN(
           filters=int(256 * width),
           kernel_size=3,
@@ -100,7 +105,7 @@ class YOLOXHead(tf.keras.layers.Layer):
           activation=act,
         ),
       )
-      self._reg_conv.add(
+      self._reg_conv.append(
         nn_blocks.ConvBN(
           filters=int(256 * width),
           kernel_size=3,
@@ -112,7 +117,7 @@ class YOLOXHead(tf.keras.layers.Layer):
       )
 
 
-      self._cls_pred.add(
+      self._cls_pred.append(
         tf.keras.layers.Conv2D(
           filters=self._n_anchors * self._num_classes,
           kernel_size=1,
@@ -120,7 +125,7 @@ class YOLOXHead(tf.keras.layers.Layer):
           padding='valid',
         ),
       )
-      self._reg_preds.add(
+      self._reg_preds.append(
         tf.keras.layers.Conv2D(
           filters=4,
           kernel_size=1,
@@ -128,7 +133,7 @@ class YOLOXHead(tf.keras.layers.Layer):
           padding='valid',
         ),
       )
-      self._obj_preds.add(
+      self._obj_preds.append(
         tf.keras.layers.Conv2D(
           filters=self._n_anchors * 1,
           kernel_size=1,
