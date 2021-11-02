@@ -414,6 +414,55 @@ class YoloTask(base_task.Task):
     logging.info('Finished loading pretrained checkpoint from %s',
                  ckpt_dir_or_file)
 
+  # def initialize(self, model: tf.keras.Model):
+  #     from yolo.utils import DarkNetConverter
+  #     from yolo.utils._darknet2tf.load_weights import split_converter
+  #     from yolo.utils._darknet2tf.load_weights2 import load_weights_backbone
+  #     from yolo.utils._darknet2tf.load_weights2 import load_weights_decoder
+  #     from yolo.utils._darknet2tf.load_weights2 import load_weights_prediction_layers
+  #     from yolo.utils.downloads.file_manager import download
+
+  #     weights_file = "/home/vbanna/Research/TensorFlowModels/cache/weights/yolov4-p5.weights"#self.task_config.model.darknet_weights_file
+  #     config_file = "/home/vbanna/Research/TensorFlowModels/cache/cfg/yolov4-p5.cfg" #self.task_config.model.darknet_weights_cfg
+
+  #     #if ('cache' not in weights_file and 'cache' not in config_file):
+  #     list_encdec = DarkNetConverter.read(config_file, weights_file)
+  #     # else:
+  #     #   import os
+  #     #   path = os.path.abspath('cache')
+  #     #   if (not os.path.isdir(path)):
+  #     #     os.mkdir(path)
+
+  #     #   cfg = f"{path}/cfg/{config_file.split('/')[-1]}"
+  #     #   if not os.path.isfile(cfg):
+  #     #     download(config_file.split('/')[-1])
+
+  #     #   wgt = f"{path}/weights/{weights_file.split('/')[-1]}"
+  #     #   if not os.path.isfile(wgt):
+  #     #     download(weights_file.split('/')[-1])
+
+  #     #   list_encdec = DarkNetConverter.read(cfg, wgt)
+
+  #     splits = model.backbone._splits
+  #     if 'neck_split' in splits.keys():
+  #       encoder, neck, decoder = split_converter(list_encdec,
+  #                                                splits['backbone_split'],
+  #                                                splits['neck_split'])
+  #     else:
+  #       encoder, decoder = split_converter(list_encdec,
+  #                                          splits['backbone_split'])
+  #       neck = None
+
+  #     load_weights_backbone(model.backbone, encoder)
+  #     #model.backbone.trainable = False
+
+  #     # if self.task_config.darknet_load_decoder:
+  #     cfgheads = load_weights_decoder(
+  #         model.decoder, [decoder, []],
+  #         csp= ("csp" in self._task_config.model.decoder.get().type))
+  #     load_weights_prediction_layers(cfgheads, model.head)
+
+
   def _wrap_optimizer(self, optimizer, runtime_config):
     """Wraps the optimizer object with the loss scale optimizer."""
     if runtime_config and runtime_config.loss_scale:

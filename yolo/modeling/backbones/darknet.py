@@ -250,9 +250,13 @@ CSPMDARKNET53 = {
 LARGECSP53 = {
     'list_names':
         LISTNAMES,
+    # 'splits': {
+    #     'backbone_split': 100,
+    #     'neck_split': 135
+    # },
     'splits': {
-        'backbone_split': 100,
-        'neck_split': 135
+        'backbone_split': 160,
+        # 'neck_split': 185
     },
     'backbone': [
         [
@@ -279,14 +283,14 @@ LARGECSP53 = {
             'DarkRes', 'csp', 7, False, 1024, None, None, None, None, 'mish',
             -1, 4, 5, True
         ],
-        [
-            'DarkRes', 'csp', 7, False, 1024, None, None, None, None, 'mish',
-            -1, 8, 6, True
-        ],
-        [
-            'DarkRes', 'csp', 7, False, 1024, None, None, None, None, 'mish',
-            -1, 16, 7, True
-        ],
+        # [
+        #     'DarkRes', 'csp', 7, False, 1024, None, None, None, None, 'mish',
+        #     -1, 8, 6, True
+        # ],
+        # [
+        #     'DarkRes', 'csp', 7, False, 1024, None, None, None, None, 'mish',
+        #     -1, 16, 7, True
+        # ],
     ]
 }
 
