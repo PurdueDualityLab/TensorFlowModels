@@ -793,7 +793,7 @@ class CSPStack(tf.keras.layers.Layer):
   """CSP Stack layer.
 
   CSP full stack, combines the route and the connect in case you dont want to
-  jsut quickly wrap an existing callable or list of layers to
+  just quickly wrap an existing callable or list of layers to
   make it a cross stage partial. Added for ease of use. you should be able
   to wrap any layer stack with a CSP independent of wether it belongs
   to the Darknet family. if filter_scale = 2, then the blocks in the stack

@@ -17,8 +17,6 @@
 
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Conv2D, DepthwiseConv2D, Concatenate
-from torch.nn.modules.conv import Conv2d
 from yolo.modeling.layers import nn_blocks
 from yolo.ops import box_ops
 
@@ -80,7 +78,6 @@ class YOLOXHead(tf.keras.layers.Layer):
             filters=int(256 * width),
             kernel_size=3,
             strides=(1, 1),
-            padding='same', # TODO (pad = ksize - 1 ) // 2
             use_bn = True,
             activation=act,
           ),
@@ -88,7 +85,6 @@ class YOLOXHead(tf.keras.layers.Layer):
             filters=int(256 * width),
             kernel_size=3,
             strides=(1, 1),
-            padding='same', # TODO
             use_bn = True,
             activation=act,
           ),
@@ -100,22 +96,20 @@ class YOLOXHead(tf.keras.layers.Layer):
       self._reg_conv.append(
         Sequential(
           [
-            nn_blocks.ConvBN(
-            filters=int(256 * width),
-            kernel_size=3,
-            strides=(1, 1),
-            padding='valid', # TODO
-            use_bn = True,
-            activation=act,
-          ),
-          nn_blocks.ConvBN(
-            filters=int(256 * width),
-            kernel_size=3,
-            strides=(1, 1),
-            padding='valid', # TODO
-            use_bn = True,
-            activation=act,
-          ),
+            Conv(
+              filters=int(256 * width),
+              kernel_size=3,
+              strides=(1, 1),
+              use_bn = True,
+              activation=act,
+            ),
+            Conv(
+              filters=int(256 * width),
+              kernel_size=3,
+              strides=(1, 1),
+              use_bn = True,
+              activation=act,
+            ),
           ]
         )
       )
