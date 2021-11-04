@@ -19,7 +19,6 @@ import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, DepthwiseConv2D, Concatenate
 from torch.nn.modules.conv import Conv2d
-
 from yolo.modeling.layers import nn_blocks
 from yolo.ops import box_ops
 
@@ -61,7 +60,7 @@ class YOLOXHead(tf.keras.layers.Layer):
     self._prior_prob = 1e-2
     self.bias=-tf.math.log((1-self.prior_prob)/self.prior_prob)
 
-    Conv = DWConv if depthwise else BaseConv 
+    Conv = nn_blocks.DWConv if depthwise else nn_blocks.ConvBN 
     for i in range(len(in_channels)):
       self._stems.append(
         nn_blocks.ConvBN(
