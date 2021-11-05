@@ -56,7 +56,7 @@ class YOLOXHead(tf.keras.layers.Layer):
     self._stems = []
 
     self._prior_prob = 1e-2
-    self.bias=-tf.math.log((1-self.prior_prob)/self.prior_prob)
+    self.bias=-tf.math.log((1-self._prior_prob)/self._prior_prob)
 
     Conv = nn_blocks.DWConv if depthwise else nn_blocks.ConvBN 
     for i in range(len(in_channels)):
@@ -150,31 +150,48 @@ class YOLOXHead(tf.keras.layers.Layer):
       # self.strides = strides
       # self.grids = [tf.zeros(1)] * len(in_channels)
 
-    def call(self, xin, labels=None, imgs=None):
-      outputs = []
-      origin_preds = []
-      x_shifts = []
-      y_shifts = []
-      expanded_strides = []
+  def call(self, inputs, *args, **kwargs):
+    outputs=[]
+    for k,x in enumerate(inputs):
+        x = self.stems[k](x)
+        cls_x = x
+        reg_x = x
 
-      for k, (cls_conv, reg_conv, stride_this_level, x) in enumerate(
-          zip(self.cls_convs, self.reg_convs, self.strides, xin)
-      ):
-          x = self.stems[k](x)
-          cls_x = x
-          reg_x = x
+        cls_feat = self._cls_conv[k](cls_x)
+        cls_output = self._cls_pred[k](cls_feat)
 
-# cls - feature and output
-          cls_feat = cls_conv(cls_x)
-          cls_output = self.cls_preds[k](cls_feat)
+        reg_feat = self._reg_conv[k](reg_x)
+        reg_output = self._reg_pred[k](reg_feat)
+        obj_output = self._obj_pred[k](reg_feat)
+        out_put=Concatenate(-1)([reg_output,obj_output,cls_output])
+        outputs.append(out_put)
 
-# reg & obj - feature and output
-          reg_feat = reg_conv(reg_x)
-          reg_output = self.reg_preds[k](reg_feat)
-          obj_output = self.obj_preds[k](reg_feat)
-          output=Concatenate(-1)([reg_output,obj_output,cls_output])
-          outputs.append(output)
-      return outputs
+    return outputs
+#     def call(self, xin, labels=None, imgs=None):
+#       outputs = []
+#       origin_preds = []
+#       x_shifts = []
+#       y_shifts = []
+#       expanded_strides = []
+
+#       for k, (cls_conv, reg_conv, stride_this_level, x) in enumerate(
+#           zip(self.cls_convs, self.reg_convs, self.strides, xin)
+#       ):
+#           x = self.stems[k](x)
+#           cls_x = x
+#           reg_x = x
+
+# # cls - feature and output
+#           cls_feat = cls_conv(cls_x)
+#           cls_output = self.cls_preds[k](cls_feat)
+
+# # reg & obj - feature and output
+#           reg_feat = reg_conv(reg_x)
+#           reg_output = self.reg_preds[k](reg_feat)
+#           obj_output = self.obj_preds[k](reg_feat)
+#           output=Concatenate(-1)([reg_output,obj_output,cls_output])
+#           outputs.append(output)
+#       return outputs
           # if self.training:
           #     output = tf.concat([reg_output, obj_output, cls_output], 1)
           #     output, grid = self.get_output_and_grid(
