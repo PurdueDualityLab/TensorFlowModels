@@ -26,10 +26,9 @@ task:
       scale_xy:
         'all': 2.5
       max_boxes: 300
-      nms_type: greedy
+      nms_type: iou
       iou_thresh: 0.001
       nms_thresh: 0.60
-      pre_nms_points: 500
     loss:
       use_scaled_loss: null
       update_on_repeat: true
