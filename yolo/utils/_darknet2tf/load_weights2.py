@@ -3,11 +3,14 @@ from .config_classes import convCFG, samCFG
 import numpy as np
 
 
+# def split_converter(lst, i, j=None):
+#   if j is None:
+#     return lst.data[:i], lst.data[i:j], lst.data[j:]
+#   return lst.data[:i], lst.data[i:]
 def split_converter(lst, i, j=None):
   if j is None:
-    return lst.data[:i], lst.data[i:j], lst.data[j:]
-  return lst.data[:i], lst.data[i:]
-
+    return lst[:i], lst[i:j], lst[j:]
+  return lst[:i], lst[i:]
 
 def load_weight(cfg, layer):
   weights = cfg.get_weights()
@@ -121,7 +124,7 @@ def load_weights_fpn(model, net, csp=False):
   return
 
 
-def load_weights_pan(model, net, csp=False, out_conv=340):
+def load_weights_pan(model, net, csp=False, out_conv=255):
   convs = []
   cfg_heads = []
   sam = 0
@@ -187,19 +190,19 @@ def deconstruct_route_process(mod):
         for b in a.submodules:
           if isinstance(b, ConvBN):
             dark_convs.append(b)
-            print("rout conv", b.name) #, b._filters )
+            print("rout conv")
       if isinstance(a, CSPConnect):
         for b in a.submodules:
           if isinstance(b, ConvBN):
             dark_convs.append(b)
-            print("connect conv", b.name) #, b._filters)
+            print("connect conv")
       if isinstance(a, SAM):
         for b in a.submodules:
           if isinstance(b, ConvBN):
             dark_convs.append(b)
       if isinstance(a, ConvBN):
         dark_convs.append(a)
-        print("conv", a.name, a._filters)
+        print("conv")
     return dark_convs
   return None
 
@@ -211,7 +214,7 @@ def deconstruct_path_agg(mod):
     for a in mod.submodules:
       if isinstance(a, ConvBN):
         path_convs.append(a)
-        print("path conv", a.name, a._filters)
+        print("path conv")
     return path_convs
   return None
 
@@ -230,75 +233,63 @@ def load_csp(net, model, out_conv=340):
       if not ishead(out_conv, layer):
         convs.append(layer)
       else:
-        layer2 = convs.pop(-1)
         cfg_heads.append(layer)
+
+  # convs.pop(0)
 
   for layer in model.layers:
     # if isinstance(mod, DarkRouteProcess):
-    print(layer.name)
     if "input" not in layer.name and "fpn" in layer.name:
-      route_convs = []
-      merges = []
-      for mod in reversed(layer.submodules):
-        # print(mod.name)
-        dark_convs = deconstruct_route_process(mod)
-        if dark_convs is not None:
-          route_convs.append(dark_convs)
-        path_convs = deconstruct_path_agg(mod)
-        if path_convs is not None:
-          merges.append(path_convs)
-      blocks = []
-      for i in range(len(route_convs)):
-        if i != 0:
-          blocks.extend(merges[i - 1])
-        blocks.extend(route_convs[i])
-
-      print(len(blocks), len(convs))
-
-      # for i, layer in enumerate(blocks):
-      #   print(layer.name, layer._filters, convs[i])
-      #   load_weight(cfg, layer)
-
-      # blocks = blocks[9:] + blocks[0:9]
-      for layer in blocks:
-        cfg = convs.pop(0)
-        print(layer.name, layer._filters, layer._kernel_size, cfg)
-        load_weight(cfg, layer)
-        
-
-    if "input" not in layer.name and "pan" in layer.name:
       route_convs = []
       merges = []
       for mod in layer.submodules:
         # print(mod.name)
         dark_convs = deconstruct_route_process(mod)
         if dark_convs is not None:
-          # route_convs.append(list(reversed(dark_convs)))
           route_convs.append(dark_convs)
         path_convs = deconstruct_path_agg(mod)
         if path_convs is not None:
-          # merges.append(list(reversed(path_convs)))
           merges.append(path_convs)
       blocks = []
-      # for i in range(len(route_convs)):
-      #   blocks.extend(route_convs[i])
-      #   try:
-      #     blocks.extend(merges[i])
-      #   except:
-      #     pass
       for i in range(len(route_convs)):
-        
-        if i != len(route_convs) - 1:
-          blocks.extend(merges[i])
         blocks.extend(route_convs[i])
+        try:
+          blocks.extend(merges[i])
+        except:
+          pass
       print(len(blocks), len(convs))
 
-      
-      for i, layer in enumerate(blocks):
-        cfg = convs[i]
-        print(layer.name, layer._filters, layer._kernel_size, cfg)
+      #blocks = blocks[11:] + blocks[0:11]
+      blocks = blocks[22:] + blocks[11:22] + blocks[0:11]
+      for i in range(len(blocks)):
+        print(convs[i], blocks[i]._filters, blocks[i]._kernel_size)        
+
 
       
+      for layer in blocks:
+        cfg = convs.pop(0)
+        load_weight(cfg, layer)
+        print(layer.name, layer._filters, layer._kernel_size, cfg)
+    if "input" not in layer.name and "pan" in layer.name:
+      route_convs = []
+      merges = []
+      for mod in layer.submodules:
+        print(mod.name)
+        dark_convs = deconstruct_route_process(mod)
+        if dark_convs is not None:
+          route_convs.append(dark_convs)
+        path_convs = deconstruct_path_agg(mod)
+        if path_convs is not None:
+          merges.append(path_convs)
+      blocks = []
+      for i in range(len(route_convs)):
+        blocks.extend(route_convs[i])
+        try:
+          blocks.extend(merges[i])
+        except:
+          pass
+      print(len(blocks), len(convs))
+
       for layer in blocks:
         cfg = convs.pop(0)
         print(layer.name, layer._filters, layer._kernel_size, cfg)

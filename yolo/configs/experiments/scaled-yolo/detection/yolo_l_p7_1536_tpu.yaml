@@ -1,9 +1,10 @@
 # --experiment_type=large_yolo
 # mAP 54.6%
 runtime:
-  distribution_strategy: 'tpu'
+  distribution_strategy: 'mirrored'
   mixed_precision_dtype: 'float32'
   tpu_enable_xla_dynamic_padder: false
+  num_gpus: 1
 task:
   model:
     input_size: [1536, 1536, 3]

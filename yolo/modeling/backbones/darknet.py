@@ -212,51 +212,12 @@ CSPADARKNET53 = {
     ]
 }
 
-CSPMDARKNET53 = {
-    'list_names':
-        LISTNAMES,
-    'splits': {
-        'backbone_split': 100,
-        'neck_split': 135
-    },
-    'backbone': [
-        [
-            'ConvBN', None, 1, False, 32, None, 3, 1, 'same', 'mish', -1, 1, 0,
-            False
-        ],
-        [
-            'DarkRes', 'residual', 1, True, 64, None, None, None, None, 'mish',
-            -1, 1, 1, False
-        ],
-        [
-            'DarkRes', 'csp', 2, False, 128, None, None, None, None, 'mish', -1,
-            1, 2, False
-        ],
-        [
-            'DarkRes', 'csp', 6, False, 256, None, None, None, None, 'mish', -1,
-            1, 3, True
-        ],
-        [
-            'DarkRes', 'csp', 6, False, 512, None, None, None, None, 'mish', -1,
-            2, 4, True
-        ],
-        [
-            'DarkRes', 'csp', 3, False, 1024, None, None, None, None, 'mish',
-            -1, 4, 5, True
-        ],
-    ]
-}
-
 LARGECSP53 = {
     'list_names':
         LISTNAMES,
-    # 'splits': {
-    #     'backbone_split': 100,
-    #     'neck_split': 135
-    # },
     'splits': {
-        'backbone_split': 160,
-        # 'neck_split': 185
+        # 'backbone_split': 159,
+        'backbone_split': 187,
     },
     'backbone': [
         [
@@ -264,7 +225,7 @@ LARGECSP53 = {
             False
         ],
         [
-            'DarkRes', 'csp', 1, True, 64, None, None, None, None, 'mish', -1,
+            'DarkRes', 'csp', 1, False, 64, None, None, None, None, 'mish', -1,
             1, 1, False
         ],
         [
@@ -283,14 +244,14 @@ LARGECSP53 = {
             'DarkRes', 'csp', 7, False, 1024, None, None, None, None, 'mish',
             -1, 4, 5, True
         ],
-        # [
-        #     'DarkRes', 'csp', 7, False, 1024, None, None, None, None, 'mish',
-        #     -1, 8, 6, True
-        # ],
-        # [
-        #     'DarkRes', 'csp', 7, False, 1024, None, None, None, None, 'mish',
-        #     -1, 16, 7, True
-        # ],
+        [
+            'DarkRes', 'csp', 7, False, 1024, None, None, None, None, 'mish',
+            -1, 8, 6, True
+        ],
+        [
+            'DarkRes', 'csp', 7, False, 1024, None, None, None, None, 'mish',
+            -1, 16, 7, True
+        ],
     ]
 }
 
@@ -407,7 +368,6 @@ BACKBONES = {
     'altered_cspdarknet53': CSPADARKNET53,
     'cspdarknettiny': CSPDARKNETTINY,
     'csp-large': LARGECSP53,
-    'csp-medium': CSPMDARKNET53
 }
 
 
@@ -423,7 +383,7 @@ class Darknet(tf.keras.Model):
       max_level=5,
       width_scale=1.0,
       depth_scale=1.0,
-      use_reorg_input = False, 
+      use_reorg_input=False,
       csp_level_mod=(),
       activation=None,
       use_sync_bn=False,
@@ -708,6 +668,7 @@ class Darknet(tf.keras.Model):
         'activation': self._activation,
     }
     return layer_config
+
 
 @factory.register_backbone_builder('darknet')
 def build_darknet(

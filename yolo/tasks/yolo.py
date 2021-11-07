@@ -422,8 +422,11 @@ class YoloTask(base_task.Task):
   #     from yolo.utils._darknet2tf.load_weights2 import load_weights_prediction_layers
   #     from yolo.utils.downloads.file_manager import download
 
-  #     weights_file = "/home/vbanna/Research/TensorFlowModels/cache/weights/yolov4-p5.weights"#self.task_config.model.darknet_weights_file
-  #     config_file = "/home/vbanna/Research/TensorFlowModels/cache/cfg/yolov4-p5.cfg" #self.task_config.model.darknet_weights_cfg
+  #     # weights_file = "/home/vbanna/Research/TensorFlowModels/cache/weights/yolov4-p5.weights"#self.task_config.model.darknet_weights_file
+  #     # config_file = "/home/vbanna/Research/TensorFlowModels/cache/cfg/yolov4-p5.cfg" #self.task_config.model.darknet_weights_cfg
+
+  #     weights_file = "/home/vbanna/Research/TensorFlowModels/cache/weights/yolov4-p6.weights"#self.task_config.model.darknet_weights_file
+  #     config_file = "/home/vbanna/Research/TensorFlowModels/cache/cfg/yolov4-p6.cfg" #self.task_config.model.darknet_weights_cfg
 
   #     #if ('cache' not in weights_file and 'cache' not in config_file):
   #     list_encdec = DarkNetConverter.read(config_file, weights_file)
@@ -443,6 +446,32 @@ class YoloTask(base_task.Task):
 
   #     #   list_encdec = DarkNetConverter.read(cfg, wgt)
 
+  #     backbone = self.task_config.model.backbone.get()
+  #     num = 4 * (backbone.max_level - backbone.min_level + 1)
+  #     head = list(list_encdec)[-num:]
+  #     list_encdec = list(list_encdec)[:-num]
+
+  #     heads = []
+  #     for j in range(4, num + 4, 4):
+  #       heads.append(head[(j - 4):(j)]) 
+
+  #     print(len(heads), num)
+      
+  #     for layer in reversed(heads):
+  #       offset = 0
+  #       p = layer.pop(0)
+  #       ind = p.layers[0]
+  #       offset += 1
+  #       for l in layer:
+  #         list_encdec.insert(ind+offset, l)
+  #         offset += 1
+  #       #print(list_encdec[ind + offset], len(list_encdec))
+      
+  #     print()
+  #     for layer in list_encdec:
+  #       print(layer)
+  #     print()
+
   #     splits = model.backbone._splits
   #     if 'neck_split' in splits.keys():
   #       encoder, neck, decoder = split_converter(list_encdec,
@@ -453,12 +482,14 @@ class YoloTask(base_task.Task):
   #                                          splits['backbone_split'])
   #       neck = None
 
+  #     print(len(encoder), len(decoder))
+
   #     load_weights_backbone(model.backbone, encoder)
   #     #model.backbone.trainable = False
 
   #     # if self.task_config.darknet_load_decoder:
   #     cfgheads = load_weights_decoder(
-  #         model.decoder, [decoder, []],
+  #         model.decoder, [[], decoder],
   #         csp= ("csp" in self._task_config.model.decoder.get().type))
   #     load_weights_prediction_layers(cfgheads, model.head)
 

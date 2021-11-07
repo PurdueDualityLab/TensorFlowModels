@@ -8,10 +8,15 @@ from yolo.modeling.layers.nn_blocks import ConvBN
 from .config_classes import convCFG
 
 
+# def split_converter(lst, i, j=None):
+#   if j is None:
+#     return lst.data[:i], lst.data[i:]
+#   return lst.data[:i], lst.data[i:j], lst.data[j:]
+
 def split_converter(lst, i, j=None):
   if j is None:
-    return lst.data[:i], lst.data[i:]
-  return lst.data[:i], lst.data[i:j], lst.data[j:]
+    return lst[:i], lst[i:]
+  return lst[:i], lst[i:j], lst[j:]
 
 
 def interleve_weights(block):
