@@ -75,7 +75,9 @@ def create_yolo_export_module(params,
       detection = model(images, training = False)
       detection['bbox'] = model_fn.undo_info(detection['bbox'],
                                           detection['num_detections'],
-                                          image_info, expand=False)
+                                          image_info,
+                                          expand=False)
+                                        
       final_outputs = {
         'detection_boxes': detection['bbox'],
         'detection_scores': detection['confidence'],
@@ -146,7 +148,6 @@ def get_export_module(params: cfg.ExperimentConfig,
                       input_image_size: List[int],
                       num_channels: int = 3) -> export_base.ExportModule:
   """Factory for export modules."""
-  print(type(params.task))
   if isinstance(params.task,
                 configs.image_classification.ImageClassificationTask):
     export_module = create_classification_export_module(
