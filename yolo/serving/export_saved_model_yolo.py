@@ -17,7 +17,7 @@ def main():
         batch_size = None,
         input_image_size= [640, 640],
         params=params,
-        checkpoint_path='checkpoint/',
+        checkpoint_path='../ckpt',
         export_dir = 'export_dir',
         num_channels=3, 
     )

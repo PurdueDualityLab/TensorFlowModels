@@ -25,18 +25,21 @@ from official.vision.beta.modeling import factory
 from official.vision.beta.serving import export_base_v2 as export_base
 from official.vision.beta.serving import export_utils
 from yolo.configs.yolo import YoloTask, yolo
+from yolo.serving.utils import model_fn
 from yolo.modeling import factory as yolo_factory
 
-def create_yolo_export_module(params, input_type, batch_size, input_image_size, num_channels):
+def create_yolo_export_module(params,
+                              input_type,
+                              batch_size,
+                              input_image_size,
+                              num_channels):
     input_signature = export_utils.get_image_input_signatures(
       input_type, batch_size, input_image_size, num_channels)
     input_specs = tf.keras.layers.InputSpec(
         shape=[batch_size] + input_image_size + [num_channels])
-    l2_weight_decay = params.task.weight_decay / 2.0
-    l2_regularizer = (
-        tf.keras.regularizers.l2(l2_weight_decay) if l2_weight_decay else None)
-    model,_ = yolo_factory.build_yolo(input_specs, params.task.model, l2_regularizer)
-    
+    model,_ = yolo_factory.build_yolo(input_specs = input_specs,
+                                    model_config = params.task.model,
+                                    l2_regularization = None)
 
     def preprocess_fn(inputs):
       image_tensor = export_utils.parse_image(inputs, input_type,
@@ -44,32 +47,50 @@ def create_yolo_export_module(params, input_type, batch_size, input_image_size, 
       # If input_type is `tflite`, do not apply image preprocessing.
       if input_type == 'tflite':
         return image_tensor
-      if len(tf.shape(image_tensor)) == 3:
-        image_tensor = tf.expand_dims(image_tensor, axis=0)
+
       def preprocess_image_fn(inputs):
           image = tf.cast(inputs, dtype=tf.float32)
-          image = tf.image.resize(
-        image, input_image_size, method=tf.image.ResizeMethod.BILINEAR)
           image = image / 255.
-          image.set_shape(input_image_size + [num_channels])
-          return image
+          (image, image_info) = model_fn.letterbox(image, input_image_size,
+                    letter_box = params.task.validation_data.parser.letter_box)
+          return image, image_info
 
-      images = tf.map_fn(
-          preprocess_image_fn, elems=image_tensor,
-          fn_output_signature=tf.TensorSpec(
-              shape=input_image_size + [num_channels],
-              dtype=tf.float32))
+      images_spec = tf.TensorSpec(shape=input_image_size + [3],
+                                  dtype=tf.float32)
 
-      return images
-    def postprocess_fn(predictions):
-      del predictions['raw_output']
-      return predictions
+      image_info_spec = tf.TensorSpec(shape=[4, 2], dtype=tf.float32)
+
+      images, image_info = tf.nest.map_structure(
+          tf.identity,
+          tf.map_fn(
+              preprocess_image_fn,
+              elems=inputs,
+              fn_output_signature=(images_spec, image_info_spec),
+              parallel_iterations=32))
+
+      return images, image_info
+      
+    def inference_steps(inputs, model):
+      images, image_info = inputs
+      detection = model(images, training = False)
+      detection['bbox'] = model_fn.undo_info(detection['bbox'],
+                                          detection['num_detections'],
+                                          image_info, expand=False)
+      final_outputs = {
+        'detection_boxes': detection['bbox'],
+        'detection_scores': detection['confidence'],
+        'detection_classes': detection['classes'],
+        'num_detections': detection['num_detections']
+      }
+
+      return final_outputs
 
     export_module = export_base.ExportModule(params,
                                            model=model,
                                            input_signature=input_signature,
                                            preprocessor=preprocess_fn,
-                                           postprocessor=postprocess_fn)
+                                           inference_step=inference_steps)
+
     return export_module
 
 
