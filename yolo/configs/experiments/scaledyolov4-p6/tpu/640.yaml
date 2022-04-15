@@ -60,7 +60,7 @@ task:
              '[97,189]', '[217,184]', '[171,384]', '[324,451]', 
              '[324,451]', '[545,357]', '[616,618]', '[1024,1024]']
   train_data:
-    global_batch_size: 64
+    global_batch_size: 256
     dtype: float32
     input_path: 'gs://cam2-datasets/coco/train*'
     is_training: true
@@ -88,7 +88,7 @@ task:
       anchor_thresh: 4.0
       best_match_only: True
   validation_data:
-    global_batch_size: 8
+    global_batch_size: 256
     dtype: float32
     input_path: 'gs://cam2-datasets/coco/val*'
     is_training: false
