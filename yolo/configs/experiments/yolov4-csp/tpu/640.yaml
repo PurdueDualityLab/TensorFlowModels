@@ -101,10 +101,10 @@ task:
 trainer:
   train_steps: 138750 # 555000 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 20
-  steps_per_loop: 463
-  summary_interval: 463
-  validation_interval: 463
-  checkpoint_interval: 463
+  steps_per_loop: 462
+  summary_interval: 462
+  validation_interval: 462
+  checkpoint_interval: 462
   optimizer_config:
     ema:
       average_decay: 0.9999
