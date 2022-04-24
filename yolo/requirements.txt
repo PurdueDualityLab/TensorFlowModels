@@ -68,5 +68,9 @@ Pillow
 pycocotools
 # NLP related dependencies
 seqeval
-sentencepiece
+# sentencepiece
 tflite_support
+colorama
+pyyaml
+Pillow
+python-dateutil

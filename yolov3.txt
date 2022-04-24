@@ -1,0 +1,3 @@
+
+!--PREPPING GPU--! 
+1 Physical GPUs, 1 Logical GPUs
