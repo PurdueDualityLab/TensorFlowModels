@@ -53,7 +53,7 @@ task:
       norm_momentum: 0.97
       use_sync_bn: true
     num_classes: 80
-    boxes_per_scale: 3
+    boxes_per_scale: 4
     boxes: ['[13,17]', '[31,25]', '[24,51]', 
             '[61,45]', '[48,102]', '[119,96]', 
             '[97,189]', '[217,184]', '[171,384]', 
@@ -72,8 +72,8 @@ task:
         mixup_frequency: 0.2
         mosaic_crop_mode: 'scale'
         mosaic_center: 0.0
-        aug_scale_min: 0.5
-        aug_scale_max: 1.5
+        aug_scale_min: 0.2
+        aug_scale_max: 1.8
       max_num_instances: 300
       letter_box: True
       random_flip: True
@@ -102,7 +102,7 @@ task:
   weight_decay: 0.000
   annotation_file: null
 trainer:
-  train_steps: 138750 # 160 epochs at 64 batchsize -> 500500 * 64/2
+  train_steps: 207900 # 160 epochs at 64 batchsize -> 500500 * 64/2
   validation_steps: 20
   steps_per_loop: 462
   summary_interval: 462
@@ -119,18 +119,19 @@ trainer:
         initial_learning_rate: 0.01
         name: Cosine
         alpha: 0.2
-        decay_steps: 138750
+        decay_steps: 207900
+
     optimizer:
       type: sgd_dymow
       sgd_dymow:
         momentum: 0.937
-        momentum_start: 0.8
+        momentum_start: 0.9
         nesterov: True
-        warmup_steps: 1388
+        warmup_steps: 1386
         weight_decay: 0.0005
         sim_torch: true
         name: SGD
     warmup:
       type: 'linear'
       linear:
-        warmup_steps: 1388 #learning rate rises from 0 to 0.0013 over 1000 steps
+        warmup_steps: 1386 #learning rate rises from 0 to 0.0013 over 1000 steps
